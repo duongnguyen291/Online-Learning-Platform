@@ -1,0 +1,92 @@
+.banner-container {
+    display: flex;
+    padding: 50px;
+    background-color: #F9F9F9;
+    position: relative;
+    overflow: hidden;
+}
+
+.red-ellipse-gradient {
+    background-color: #f10000;
+    border-radius: 291px/79.5px;
+    filter: blur(150px);
+    height: 159px;
+    width: 400px;
+    opacity: 0.4;
+    position: absolute;
+    left: 10%;
+    top: 40%;
+    z-index: 0;
+}
+
+.banner-content {
+    margin-top: 50px;
+    padding: 0 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 50px;
+    width: 60%;
+    position: relative;
+    z-index: 1;
+}
+
+.banner-heading1 > h2 {
+    font-size: 38px;
+    font-weight: 500;
+    white-space: nowrap;
+    margin-bottom: 0;
+}
+
+.banner-heading2 > h2 {
+    font-size: 38px;
+    white-space: nowrap;
+    margin-top: 0;
+}
+
+.banner-subheading > p {
+    font-size: 16px;
+    font-weight: 500;
+    color: #5C5C5C;
+    margin: 5px 0;
+}
+
+.banner-buttons {
+    display: flex;
+    margin: 25px 0 0 0px;
+}
+
+.banner-buttons > button {
+    padding: 18px 40px;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+}
+
+.banner-getstarted-button {
+    background-color: #BF2C2C;
+    color: #FFF;
+    font-weight: 500;
+}
+
+.banner-graphic {
+    width: 40%;
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 768px) {
+    .banner-container {
+        flex-direction: column;
+    }
+    
+    .banner-content {
+        width: 100%;
+        padding: 0 20px;
+    }
+    
+    .banner-graphic {
+        width: 100%;
+    }
+}

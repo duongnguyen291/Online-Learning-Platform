@@ -1,0 +1,94 @@
+.dashboard-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px;
+    width: 100%;
+    min-height: 400px;
+    padding-top: 130px;
+    padding-bottom: 130px;
+  }
+  
+  .dashboard-content {
+    display: flex;
+    max-width: 1000px;
+    width: 100%;
+    gap: 40px;
+    align-items: flex-start;
+  }
+  
+  .image-container {
+    flex: 0 0 45%;
+    height: 250px;
+    background-color: #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden; /* Added to contain the image */
+    display: flex; /* Added for image centering */
+    justify-content: center; /* Added for image centering */
+    align-items: center; /* Added for image centering */
+  }
+  
+  /* Added image constraints */
+  .image-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  
+  .text-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  h1 {
+    font-size: 32px;
+    font-weight: bold;
+    margin: 0;
+    color: #222;
+  }
+  
+  .feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  .ifeature-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .check-icon {
+    width: 24px;
+    height: 24px;
+    background-color: #ff9d9d;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 14px;
+  }
+  
+  .ifeature-item p {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .dashboard-content {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .image-container {
+      width: 100%;
+      max-width: 400px;
+    }
+  }
