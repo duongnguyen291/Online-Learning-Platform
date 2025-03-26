@@ -5,8 +5,9 @@
     justify-content: space-evenly;
 }
 
-.logo>img {
-    width: 90px;
+.logo>a>img, .logo>img {
+    width: 90px;  /* Reduced from 90px */
+    height: auto; /* Maintain aspect ratio */
     cursor: pointer;
 }
 
@@ -15,13 +16,19 @@
     gap: 50px;
 }
 
-.nav-items>h3 {
+.nav-items .nav-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.nav-items .nav-link h3 {
     font-weight: 400;
     font-size: 16px;
     cursor: pointer;
+    margin: 0;
 }
 
-.nav-items>h3:hover {
+.nav-items .nav-link h3:hover {
     color: #BF2C2C;
 }
 
@@ -31,7 +38,7 @@
     gap: 30px;
 }
 
-/* New button styles */
+/* Button styles remain the same */
 .login-button, 
 .signup-button {
     text-decoration: none;

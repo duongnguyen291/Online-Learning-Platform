@@ -1,37 +1,20 @@
 import './App.css';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Banner from './components/landing page/banner/Banner';
-import Feedback from './components/landing page/feedback/Feedback';
-import Footer from './components/landing page/footer/Footer';
-import Interactive from './components/landing page/interactive/Interactive';
-import Live from './components/landing page/live/Live';
-import Navbar from './components/landing page/navbar/Navbar';
-import Reason from './components/landing page/reason/Reason';
-import Login from "./components/login/Login";
-import Register from './components/register/Register';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import CoursePage from './pages/CoursePage';
 
 function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
-        {/* Trang chủ với các component như Banner, Feedback, ... */}
-        <Route path="/" element={
-          <>
-            <Navbar />
-            <Banner />
-            <Reason />
-            <Interactive />
-            <Live />
-            <Feedback />
-            <Footer />
-          </>
-        } />
-        
-        {/* Trang login */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/courses" element={<CoursePage />} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
 

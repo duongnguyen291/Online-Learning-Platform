@@ -11,10 +11,18 @@ const Navbar = () => {
       </div>
 
       <div className="nav-items">
-        <h3>Course</h3>
-        <h3>Chatbot</h3>
-        <h3>How to use</h3>
-        <h3>About us</h3>
+        <Link to="/courses" className="nav-link">
+          <h3>Course</h3>
+        </Link>
+        <Link to="/chatbot" className="nav-link">
+          <h3>Chatbot</h3>
+        </Link>
+        <Link to="/how-to-use" className="nav-link">
+          <h3>How to use</h3>
+        </Link>
+        <Link to="/about" className="nav-link">
+          <h3>About us</h3>
+        </Link>
       </div>
 
       <div className="side-nav-items">
