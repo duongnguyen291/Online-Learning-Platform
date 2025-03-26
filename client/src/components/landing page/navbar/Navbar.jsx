@@ -1,3 +1,4 @@
+import React from 'react'
 import "./navbar.css"
 import logo from "../../../assets/images/Edusmart.png"
 import { Link } from "react-router-dom"
@@ -5,7 +6,6 @@ import { Link } from "react-router-dom"
 const Navbar = () => {
   return (
     <div className="navbar-container">
-
       <div className="logo">
         <img src={logo} alt="edusmart-logo" />
       </div>
@@ -18,14 +18,13 @@ const Navbar = () => {
       </div>
 
       <div className="side-nav-items">
-      <Link to="/login" style={{ textDecoration: 'none' }}>
-        <h3>Log in</h3>
-      </Link>
-      <Link to="/register" style={{ textDecoration: 'none' }}>
-        <h3>Sign up</h3>
-      </Link>
+        <Link to="/login" className="login-button">
+          Log in
+        </Link>
+        <Link to="/register" className="signup-button">
+          Sign up
+        </Link>
       </div>
-
     </div>
   )
 }

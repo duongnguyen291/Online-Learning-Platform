@@ -14,7 +14,7 @@ function LoginForm() {
         <div className={`sign-container ${isActive ? 'active' : ''}`} id="sign-container">
         <div className="sing-form-container sign-in">
             <form action="/login" method="POST">
-            <h1>Sign In</h1>
+            <h1>Log In</h1>
             <div className="sign-social-icons">
                 <a href="#" className="icon"><FaGoogle /></a>
                 <a href="#" className="icon"><FaFacebookF /></a>
@@ -25,7 +25,7 @@ function LoginForm() {
             <input type="email" name="email" placeholder="Email" required />
             <input type="password" name="password" placeholder="Password" required />
             <a href="#">Forget Your Password?</a>
-            <button type="submit">Sign In</button>
+            <button type="submit">Log In</button>
             </form>
         </div>
         

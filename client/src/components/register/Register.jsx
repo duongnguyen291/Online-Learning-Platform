@@ -41,7 +41,7 @@ function Register() {
                 id="login"
                 onClick={handleToggleLogin}
               >
-                Sign In
+                Log In
               </button>
             </Link>
           </div>
