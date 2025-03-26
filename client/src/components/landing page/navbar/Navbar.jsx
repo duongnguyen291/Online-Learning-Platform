@@ -1,5 +1,5 @@
 import "./navbar.css"
-import logo from "../../assets/images/Edusmart.png"
+import logo from "../../../assets/images/Edusmart.png"
 import { Link } from "react-router-dom"
 
 const Navbar = () => {
@@ -18,10 +18,12 @@ const Navbar = () => {
       </div>
 
       <div className="side-nav-items">
-        <Link to="/login" style={{ textDecoration: 'none' }}>
-          <h3>Log in</h3>
-        </Link>
+      <Link to="/login" style={{ textDecoration: 'none' }}>
+        <h3>Log in</h3>
+      </Link>
+      <Link to="/register" style={{ textDecoration: 'none' }}>
         <h3>Sign up</h3>
+      </Link>
       </div>
 
     </div>

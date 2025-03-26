@@ -1,5 +1,5 @@
 import "./footer.css"
-import logo from "../../assets/images/Edusmart.png"
+import logo from "../../../assets/images/Edusmart.png"
 
 const Footer = () => {
     return (
@@ -49,13 +49,6 @@ const Footer = () => {
                     </ul>
                 </div>
 
-            </div>
-
-            <div className="footer-bottom">
-                <p>&copy; Medic 2028</p>
-                <p>Legal Policies</p>
-                <p>Sitemap</p>
-                <p>Cookies</p>
             </div>
 
         </>

@@ -1,7 +1,7 @@
 import './live.css';
-import onlineClassIcon from "../../assets/images/sound.jpg"
-import liveChatIcon from "../../assets/images/live.jpg"
-import recordedClassIcon from "../../assets/images/video.jpg"
+import onlineClassIcon from "../../../assets/images/sound.jpg"
+import liveChatIcon from "../../../assets/images/live.jpg"
+import recordedClassIcon from "../../../assets/images/video.jpg"
 
 const Live = () => {
   return (

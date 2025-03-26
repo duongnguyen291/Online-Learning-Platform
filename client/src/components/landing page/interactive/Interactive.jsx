@@ -1,5 +1,5 @@
 import './interactive.css';
-import logo from "../../assets/images/dashboard.png"
+import logo from "../../../assets/images/dashboard.png"
 
 const Interactive = () => {
   return (

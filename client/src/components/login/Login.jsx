@@ -1,34 +1,57 @@
-import React from 'react'
-import './login.css'
-import { FaUserAlt } from "react-icons/fa";
-import { FaLock } from "react-icons/fa";
+import React, { useState } from 'react';
+import './login.css';
+import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
+import { Link } from 'react-router-dom';
 
 function LoginForm() {
+  const [isActive, setIsActive] = useState(false);
+
+  const handleToggleRegister = () => {
+    setIsActive(true);
+  };
+
   return (
-    <div className='wrapper'>
-        <form action="">
-            <h1>Login</h1>
-            <div className="input-box">
-                <input type="text" placeholder="Username" required/>
-                <FaUserAlt className='icon'/>
+        <div className={`sign-container ${isActive ? 'active' : ''}`} id="sign-container">
+        <div className="sing-form-container sign-in">
+            <form action="/login" method="POST">
+            <h1>Sign In</h1>
+            <div className="sign-social-icons">
+                <a href="#" className="icon"><FaGoogle /></a>
+                <a href="#" className="icon"><FaFacebookF /></a>
+                <a href="#" className="icon"><FaGithub /></a>
+                <a href="#" className="icon"><FaLinkedinIn /></a>
             </div>
-            <div className="input-box">
-                <input type="password" placeholder="Password" required/>
-                <FaLock className='icon'/>
+            <span>or use your email password</span>
+            <input type="email" name="email" placeholder="Email" required />
+            <input type="password" name="password" placeholder="Password" required />
+            <a href="#">Forget Your Password?</a>
+            <button type="submit">Sign In</button>
+            </form>
+        </div>
+        
+        <div className="toggle-container">
+            <div className="toggle">
+            <div className="toggle-panel toggle-left">
+                <h1>Welcome Back!</h1>
+                <p>Enter your personal details to use all of site features</p>
             </div>
-            <div className="remember-forgot">
-                <label><input type="checkbox" /> Remember me</label>
-                <span className="text-link">Forgot password?</span>
+            <div className="toggle-panel toggle-right">
+                <h1>Hello, Friend!</h1>
+                <p>Register with your personal details to use all of site features</p>
+                <Link to="/register">
+                <button 
+                    className="hidden" 
+                    id="register"
+                    onClick={handleToggleRegister}
+                >
+                    Sign Up
+                </button>
+                </Link>
             </div>
-            <button type='submit'>Login</button>
-            <div className="register-link">
-                <p>Don't have an account?
-                    <span className="register-link"> Register</span>
-                </p>
             </div>
-        </form>
-    </div>
-  )
+        </div>
+        </div>
+  );
 }
 
-export default LoginForm
+export default LoginForm;

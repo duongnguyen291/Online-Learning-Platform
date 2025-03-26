@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './feedback.css';
-import Ava from "../../assets/images/avatar.jpg"
+import Ava from "../../../assets/images/avatar.jpg"
 
 const Feedback = () => {
   // Sample testimonial data

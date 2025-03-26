@@ -9,8 +9,7 @@
     height: 100vh;
 } */
 
-
-.sign-container {
+.-sign-container {
     background-color: #fff;
     border-radius: 30px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
@@ -22,29 +21,8 @@
     width: 768px;
     max-width: 100%;
     min-height: 480px;
-    display: flex; /* Add flexbox */
-    align-items: center; /* Vertically center the content */
 }
 
-.sing-form-container.sign-in {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    width: 50%;
-}
-
-.sing-form-container.sign-in form {
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Vertically center form content */
-    align-items: center;
-    height: 100%;
-    padding: 0 40px;
-    width: 100%;
-}
-
-/* Rest of the CSS remains the same */
 .sign-container p {
     font-size: 14px;
     line-height: 20px;
