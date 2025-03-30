@@ -1,0 +1,191 @@
+/* Search styles */
+.search-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    width: 100%;
+    max-width: 600px;
+    position: relative;
+    margin: 20px auto;
+  }
+  
+  .search-input-wrapper {
+    display: flex;
+    width: 100%;
+    border-radius: 50px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    border: 1px solid #e0e0e0;
+  }
+  
+  .search-input {
+    flex-grow: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 50px 0 0 50px;
+    font-size: 1rem;
+    outline: none;
+    background: white;
+  }
+  
+  .search-button {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 0 50px 50px 0;
+    cursor: pointer;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+  }
+  
+  .search-button:hover {
+    background-color: #b71c1c;
+  }
+  
+  /* Recommendations dropdown */
+  .search-recommendations {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-top: 10px;
+    max-height: 450px;
+    overflow-y: auto;
+    z-index: 100;
+  }
+  
+  .recommendation-section {
+    padding: 10px 0;
+  }
+  
+  .recommendation-section h4 {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0;
+    padding: 0 15px 10px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .recommendation-section ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .recommendation-section li {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .recommendation-section li:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .recommendation-icon {
+    margin-right: 12px;
+    color: #888;
+  }
+  
+  .recommendation-rating {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    color: #888;
+    font-size: 0.9rem;
+  }
+  
+  .recommendation-rating .star {
+    color: #ffc107;
+    margin-right: 5px;
+  }
+  
+  .no-results {
+    padding: 20px 15px;
+    text-align: center;
+    color: #666;
+  }
+  
+  /* For mobile responsiveness */
+  @media (max-width: 768px) {
+    .search-container {
+      max-width: 100%;
+    }
+  }
+
+  /* Add these styles to your search.css file */
+
+/* Clear search button */
+.clear-search-button {
+    padding: 6px 12px;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    color: #666;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  }
+  
+  .clear-search-button:hover {
+    background-color: #e0e0e0;
+  }
+  
+  /* No search results message */
+  .no-search-results {
+    text-align: center;
+    padding: 40px 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    margin-bottom: 30px;
+  }
+  
+  .no-search-results p:first-child {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 10px;
+  }
+  
+  .no-search-results p:last-child {
+    color: #888;
+    font-size: 1rem;
+  }
+  
+  /* Highlight active search in category nav */
+  .category-nav .category-button.search-active {
+    background-color: #ffeceb;
+    color: #d32f2f;
+    border: 1px solid #ffc9c9;
+  }
+  
+  /* Section header with search results */
+  .section-header h2 {
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Search results animation */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .courses-grid {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  /* Search keyword highlight in course titles */
+  .highlight {
+    background-color: #ffe082;
+    padding: 0 2px;
+    border-radius: 3px;
+  }

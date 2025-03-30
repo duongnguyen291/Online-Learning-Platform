@@ -6,9 +6,11 @@ import { Link } from "react-router-dom"
 const Navbar = () => {
   return (
     <div className="navbar-container">
-      <div className="logo">
+    <div className="logo">
+      <a href="/">
         <img src={logo} alt="edusmart-logo" />
-      </div>
+      </a>
+    </div>
 
       <div className="nav-items">
         <Link to="/courses" className="nav-link">

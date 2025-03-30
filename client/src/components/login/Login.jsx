@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './login.css';
-import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
+import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn, FaHome } from "react-icons/fa";
 import { Link } from 'react-router-dom';
 
 function LoginForm() {
@@ -11,7 +11,13 @@ function LoginForm() {
   };
 
   return (
-        <div className={`sign-container ${isActive ? 'active' : ''}`} id="sign-container">
+    <>
+      {/* Back to Home Button */}
+      <Link to="/" className="back-to-home">
+        <FaHome /> Back to Home
+      </Link>
+      
+      <div className={`sign-container ${isActive ? 'active' : ''}`} id="sign-container">
         <div className="sing-form-container sign-in">
             <form action="/login" method="POST">
             <h1>Log In</h1>
@@ -50,7 +56,8 @@ function LoginForm() {
             </div>
             </div>
         </div>
-        </div>
+      </div>
+    </>
   );
 }
 

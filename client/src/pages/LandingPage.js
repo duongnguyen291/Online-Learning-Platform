@@ -5,8 +5,6 @@ import Reason from '../components/landing page/reason/Reason';
 import Interactive from '../components/landing page/interactive/Interactive';
 import Feedback from '../components/landing page/feedback/Feedback';
 import Footer from '../components/landing page/footer/Footer';
-import LoginForm from '../components/login/Login';
-import Register from '../components/register/Register';
 import Live from '../components/landing page/live/Live';
 
 function LandingPage() {

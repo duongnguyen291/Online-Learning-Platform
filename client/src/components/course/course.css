@@ -7,7 +7,7 @@ body {
 }
 
 .professional-degree-page {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -92,130 +92,184 @@ body {
   color: #666;
 }
   
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  
-  .section-header h2 {
-    margin: 0;
-    color: #333;
-  }
-  
-  .see-more {
-    color: #1F1C14;
-    text-decoration: none;
-  }
-  
-  .courses-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-  }
-  
-  /* Course Card Styles (similar to previous CSS) */
-  .course-card {
-    width: 250px;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    overflow: hidden;
-    position: relative;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-    background-color: white;
-  }
-  
-  .course-card:hover {
-    transform: scale(1.05);
-  }
-  
-  .course-badge-container {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    display: flex;
-    gap: 5px;
-  }
-  
-  .course-badge {
-    padding: 3px 8px;
-    font-size: 0.7rem;
-    border-radius: 4px;
-    font-weight: bold;
-  }
-  
-  .course-badge.best-seller {
-    background-color: #ff6b6b;
-    color: white;
-  }
-  
-  .course-badge.discount {
-    background-color: #4ecdc4;
-    color: white;
-  }
-  
-  .course-image-container {
-    width: 100%;
-    height: 150px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f0f0f0;
-  }
-  
-  .course-image {
-    max-width: 100px;
-    max-height: 100px;
-  }
-  
-  .course-details {
-    padding: 15px;
-  }
-  
-  .course-title {
-    margin-bottom: 10px;
-    font-size: 1rem;
-    color: #333;
-  }
-  
-  .course-rating {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  
-  .stars {
-    color: #ffc107;
-    margin-right: 5px;
-  }
-  
-  .rating-value {
-    margin-right: 5px;
-    color: #666;
-  }
-  
-  .review-count {
-    color: #999;
-    font-size: 0.8rem;
-  }
-  
-  .course-pricing {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .discounted-price {
-    font-size: 1.2rem;
-    color: #ff6b6b;
-    font-weight: bold;
-  }
-  
-  .original-price {
-    text-decoration: line-through;
-    color: #999;
-    font-size: 0.9rem;
-  }
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.see-more {
+  color: #1F1C14;
+  text-decoration: none;
+}
+
+.courses-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+/* Course Card Styles - Fixed to ensure uniform size */
+.course-card {
+  width: 250px;
+  height: 300px; /* Set a fixed height */
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.course-card:hover {
+  transform: scale(1.05);
+}
+
+.course-badge-container {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 5px;
+  z-index: 1;
+}
+
+.course-badge {
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.course-badge.best-seller {
+  background-color: #ff6b6b;
+  color: white;
+}
+
+.course-badge.discount {
+  background-color: #4ecdc4;
+  color: white;
+}
+
+.course-image-container {
+  width: 100%;
+  height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0;
+}
+
+.course-image {
+  max-width: 100px;
+  max-height: 100px;
+}
+
+.course-details {
+  padding: 15px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.course-title {
+  margin-bottom: 10px;
+  font-size: 1rem;
+  color: #333;
+  height: 42px; /* Ensures consistent height for titles */
+  overflow: hidden;
+  text-decoration: none !important; /* Prevent underlines */
+}
+
+.course-rating {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.stars {
+  color: #ffc107;
+  margin-right: 5px;
+}
+
+.rating-value {
+  margin-right: 5px;
+  color: #666;
+}
+
+.review-count {
+  color: #999;
+  font-size: 0.8rem;
+}
+
+.course-pricing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto; /* Push pricing to bottom */
+}
+
+.discounted-price {
+  font-size: 1.2rem;
+  color: #ff6b6b;
+  font-weight: bold;
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+/* Pagination styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.pagination-button {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  background-color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.pagination-button:hover {
+  background-color: #f0f0f0;
+}
+
+.pagination-button.active {
+  background-color: #E24444;
+  color: white;
+  border-color: #E24444;
+}
+
+.pagination-button:disabled {
+  background-color: #f0f0f0;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Remove underlines from links */
+a, a:hover, a:focus, a:active {
+  text-decoration: none;
+  color: inherit;
+}

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './course.css';
+import SearchBar from './Searchbar';
+import { coursesData, getAllCourses, courseCategories } from './courseData';
 
-const Course = ({ title, rating, reviews, originalPrice, discountedPrice }) => {
+const Course = ({ title, rating, reviews, originalPrice, discountedPrice, image }) => {
   return (
     <div className="course-card">
       <div className="course-badge-container">
@@ -12,7 +14,7 @@ const Course = ({ title, rating, reviews, originalPrice, discountedPrice }) => {
       
       <div className="course-image-container">
         <img 
-          src="/path/to/graduation-cap.png" 
+          src={image || "/path/to/graduation-cap.png"} 
           alt={title} 
           className="course-image"
         />
@@ -28,7 +30,7 @@ const Course = ({ title, rating, reviews, originalPrice, discountedPrice }) => {
             ))}
           </div>
           <span className="rating-value">({rating})</span>
-          <span className="review-count">{reviews} ratings</span>
+          <span className="review-count">{reviews} </span>
         </div>
         
         <div className="course-pricing">
@@ -41,53 +43,84 @@ const Course = ({ title, rating, reviews, originalPrice, discountedPrice }) => {
 };
 
 const ProfessionalDegreePage = () => {
-  const [activeCategory, setActiveCategory] = useState('Engineering');
+  const [activeCategory, setActiveCategory] = useState('All Recommendation');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchResults, setSearchResults] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const coursesPerPage = 20;
 
-  const categories = [
-    'All Recommendation', 
-    'Engineering', 
-    'Management', 
-    'Medical & Pharmacy', 
-    'Science and Technology', 
-    'Arts & Humanities', 
-    'Law', 
-    'Commerce'
-  ];
-
-  const engineeringCourses = [
-    {
-      id: 1,
-      title: 'Introduction to Engineering and Design',
-      rating: 4.7,
-      reviews: 10000,
-      originalPrice: 100,
-      discountedPrice: 80
-    },
-    {
-      id: 2,
-      title: 'Introduction to Engineering and Design',
-      rating: 4.7,
-      reviews: 10000,
-      originalPrice: 100,
-      discountedPrice: 80
-    },
-    {
-      id: 3,
-      title: 'Introduction to Engineering and Design',
-      rating: 4.7,
-      reviews: 10000,
-      originalPrice: 100,
-      discountedPrice: 80
-    },
-    {
-      id: 4,
-      title: 'Introduction to Engineering and Design',
-      rating: 4.7,
-      reviews: 10000,
-      originalPrice: 100,
-      discountedPrice: 80
+  // Get all courses list from the imported function
+  const allCoursesList = getAllCourses();
+  
+  // Handle search submission
+  const handleSearch = (results) => {
+    setSearchResults(results);
+    setIsSearching(true);
+    setCurrentPage(1);
+    
+    // If a category was selected directly, update activeCategory
+    if (results.categories.length === 1 && results.categories[0] !== 'All Recommendation') {
+      setActiveCategory(results.categories[0]);
+      setIsSearching(false); // Use normal category display instead
     }
-  ];
+  };
+  
+  // Clear search results and return to normal browsing
+  const clearSearch = () => {
+    setSearchResults(null);
+    setIsSearching(false);
+  };
+  
+  // Get current courses based on category/search and pagination
+  const getCurrentCourses = () => {
+    let filteredCourses = [];
+    
+    if (isSearching && searchResults) {
+      filteredCourses = searchResults.courses;
+    } else if (activeCategory === 'All Recommendation') {
+      filteredCourses = allCoursesList;
+    } else {
+      filteredCourses = coursesData[activeCategory] || [];
+    }
+    
+    // Calculate pagination
+    const indexOfLastCourse = currentPage * coursesPerPage;
+    const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
+    return filteredCourses.slice(indexOfFirstCourse, indexOfLastCourse);
+  };
+  
+  // Reset page to 1 when category changes
+  useEffect(() => {
+    setCurrentPage(1);
+    setIsSearching(false);
+    setSearchResults(null);
+  }, [activeCategory]);
+  
+  // Calculate total pages
+  const currentCourses = isSearching && searchResults 
+    ? searchResults.courses 
+    : (activeCategory === 'All Recommendation' 
+      ? allCoursesList 
+      : (coursesData[activeCategory] || []));
+    
+  const totalPages = Math.ceil(currentCourses.length / coursesPerPage);
+  
+  // Generate page numbers
+  const pageNumbers = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pageNumbers.push(i);
+  }
+
+  // Get section header text
+  const getSectionHeaderText = () => {
+    if (isSearching && searchResults) {
+      return `Search Results for "${searchResults.term}" (${searchResults.courses.length} courses found)`;
+    }
+    return activeCategory;
+  };
+
+  // Check if we should show the "See more" link
+  const shouldShowSeeMore = activeCategory !== 'All Recommendation' && !isSearching;
 
   return (
     <div className="professional-degree-page">
@@ -95,22 +128,23 @@ const ProfessionalDegreePage = () => {
         <h1>Professional Degree Programs</h1>
         <p>Shape your future with our comprehensive range of professional courses</p>
         
-        <div className="search-container">
-          <input 
-            type="text" 
-            placeholder="Search courses or specialization..." 
-            className="search-input"
-          />
-          <button className="search-button">Search</button>
-        </div>
+        {/* Use SearchBar component with imported data */}
+        <SearchBar 
+          allCourses={coursesData} 
+          categories={courseCategories} 
+          onSearch={handleSearch} 
+        />
       </header>
 
       <nav className="category-nav">
-        {categories.map((category, index) => (
+        {courseCategories.map((category, index) => (
           <button 
             key={index} 
-            className={`category-button ${activeCategory === category ? 'active' : ''}`}
-            onClick={() => setActiveCategory(category)}
+            className={`category-button ${activeCategory === category && !isSearching ? 'active' : ''}`}
+            onClick={() => {
+              setActiveCategory(category);
+              clearSearch();
+            }}
           >
             {category}
           </button>
@@ -120,23 +154,76 @@ const ProfessionalDegreePage = () => {
 
       <section className="courses-section">
         <div className="section-header">
-          <h2>{activeCategory}</h2>
-          <Link to="/courses" className="see-more">See more &gt;</Link>
+          <h2>{getSectionHeaderText()}</h2>
+          
+          {isSearching && (
+            <button 
+              onClick={clearSearch}
+              className="clear-search-button"
+            >
+              Clear Search
+            </button>
+          )}
+          
+          {shouldShowSeeMore && (
+            <Link to="/courses" className="see-more">See more &gt;</Link>
+          )}
         </div>
 
+        {isSearching && searchResults && searchResults.courses.length === 0 && (
+          <div className="no-search-results">
+            <p>No courses found matching "{searchResults.term}"</p>
+            <p>Try a different search term or browse by category</p>
+          </div>
+        )}
+
         <div className="courses-grid">
-          {engineeringCourses.map((course) => (
-            <Link to={`/course/${course.id}`} key={course.id}>
-              <Course 
-                title={course.title}
-                rating={course.rating}
-                reviews={course.reviews}
-                originalPrice={course.originalPrice}
-                discountedPrice={course.discountedPrice}
-              />
-            </Link>
+          {getCurrentCourses().map((course) => (
+            <div key={course.id}>
+              <Link to={`/course/${course.id}`} style={{ textDecoration: 'none' }}>
+                <Course 
+                  title={course.title}
+                  rating={course.rating}
+                  reviews={course.reviews}
+                  originalPrice={course.originalPrice}
+                  discountedPrice={course.discountedPrice}
+                  image={course.image}
+                />
+              </Link>
+            </div>
           ))}
         </div>
+        
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="pagination-button"
+            >
+              &lt;
+            </button>
+            
+            {pageNumbers.map(number => (
+              <button
+                key={number}
+                onClick={() => setCurrentPage(number)}
+                className={`pagination-button ${currentPage === number ? 'active' : ''}`}
+              >
+                {number}
+              </button>
+            ))}
+            
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="pagination-button"
+            >
+              &gt;
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );

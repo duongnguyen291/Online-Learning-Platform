@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './register.css';
-import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
+import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn, FaHome } from "react-icons/fa";
 import { Link } from 'react-router-dom';
 
 function Register() {
@@ -11,6 +11,11 @@ function Register() {
   };
 
   return (
+    <>
+          {/* Back to Home Button */}
+          <Link to="/" className="back-to-home">
+            <FaHome /> Back to Home
+          </Link>
     <div className={`sign-container ${isActive ? 'active' : ''}`} id="sign-container">
       <div className="sign-form-container sign-up">
         <form action="/register" method="POST">
@@ -52,6 +57,7 @@ function Register() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

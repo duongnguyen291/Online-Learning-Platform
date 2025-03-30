@@ -13,7 +13,7 @@
 
 .nav-items {
     display: flex;
-    gap: 50px;
+    gap: 60px;
 }
 
 .nav-items .nav-link {
@@ -35,14 +35,14 @@
 .side-nav-items {
     display: flex;
     align-items: center;
-    gap: 30px;
+    gap: 50px;
 }
 
 /* Button styles remain the same */
 .login-button, 
 .signup-button {
     text-decoration: none;
-    padding: 10px 20px;
+    padding: 8px 25px;
     border-radius: 20px;
     font-size: 16px;
     font-weight: 400;
