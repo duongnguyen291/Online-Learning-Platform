@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import './course.css';
 import SearchBar from './Searchbar';
 import { coursesData, getAllCourses, courseCategories } from './courseData';
@@ -20,8 +20,8 @@ const Course = ({ title, rating, reviews, originalPrice, discountedPrice, image 
         />
       </div>
       
-      <div className="course-details">
-        <h3 className="course-title">{title}</h3>
+      <div className="course-details-general">
+        <h3 className="course-title-general">{title}</h3>
         
         <div className="course-rating">
           <div className="stars">
@@ -43,7 +43,11 @@ const Course = ({ title, rating, reviews, originalPrice, discountedPrice, image 
 };
 
 const ProfessionalDegreePage = () => {
-  const [activeCategory, setActiveCategory] = useState('All Recommendation');
+  const location = useLocation();
+  // Check if we have a category passed via state
+  const categoryFromState = location.state?.category;
+  
+  const [activeCategory, setActiveCategory] = useState(categoryFromState || 'All Recommendation');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchResults, setSearchResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -89,6 +93,16 @@ const ProfessionalDegreePage = () => {
     return filteredCourses.slice(indexOfFirstCourse, indexOfLastCourse);
   };
   
+  // Effect to handle category from route state
+  useEffect(() => {
+    if (categoryFromState && courseCategories.includes(categoryFromState)) {
+      setActiveCategory(categoryFromState);
+      setIsSearching(false);
+      setSearchResults(null);
+      setCurrentPage(1);
+    }
+  }, [categoryFromState]);
+  
   // Reset page to 1 when category changes
   useEffect(() => {
     setCurrentPage(1);
@@ -123,6 +137,7 @@ const ProfessionalDegreePage = () => {
   const shouldShowSeeMore = activeCategory !== 'All Recommendation' && !isSearching;
 
   return (
+    // Rest of the component remains unchanged
     <div className="professional-degree-page">
       <header className="page-header">
         <h1>Professional Degree Programs</h1>

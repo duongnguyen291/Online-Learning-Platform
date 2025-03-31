@@ -19,7 +19,7 @@ body {
 
 .page-header h1 {
   font-family: 'Inter', sans-serif;
-  font-size: 3rem;
+  font-size: 3.5rem;
   background: linear-gradient(to right, #BF2C2C, #381A1A);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -32,14 +32,14 @@ body {
 
 .page-header p {
   color: #B62A2A;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   margin-bottom: 20px;
 }
 
 .search-container {
   display: flex;
   justify-content: center;
-  margin-top: 20px;
+  margin-top: 30px;
 }
 
 .search-input {
@@ -176,14 +176,14 @@ body {
   max-height: 100px;
 }
 
-.course-details {
+.course-details-general {
   padding: 15px;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
 }
 
-.course-title {
+.course-title-general {
   margin-bottom: 10px;
   font-size: 1rem;
   color: #333;
