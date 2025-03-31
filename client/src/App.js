@@ -5,9 +5,11 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import CoursePage from './pages/CoursePage';
 import CourseDetailPage from './pages/CourseDetailPage';
+import ChatbotBubble from './components/chatbot/ChatbotBubble';
 
 function App() {
   return (
+    <>
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -17,6 +19,8 @@ function App() {
         <Route path='/course/:id' element={<CourseDetailPage />} />
       </Routes>
     </Router>
+    <ChatbotBubble />
+    </>
   );
 }
 
