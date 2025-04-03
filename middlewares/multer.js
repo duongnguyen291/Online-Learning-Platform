@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 
-const multer = require("middleware/multer");
+const multer = require("middlewares/multer");
 
 // Memory storage for processing in memory (for Cloudinary direct uploads)
 const storage = multer.memoryStorage(); 
