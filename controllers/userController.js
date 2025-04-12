@@ -95,4 +95,22 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { register, loginUser };
+const logoutUser = async (req, res) => {
+  try {
+    // Xóa cookie chứa token
+    res.clearCookie('token');
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully"
+    });
+  } catch (error) {
+    console.log("Error during logout:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
+module.exports = { register, loginUser, logoutUser };
