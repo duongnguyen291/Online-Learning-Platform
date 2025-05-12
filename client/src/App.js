@@ -6,6 +6,7 @@ import RegisterPage from './pages/RegisterPage';
 import CoursePage from './pages/CoursePage';
 import CourseDetailPage from './pages/CourseDetailPage';
 import ChatbotBubble from './components/chatbot/ChatbotBubble';
+import ChatBotPage from './pages/ChatBotPage';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/courses" element={<CoursePage />} />
         <Route path='/course/:id' element={<CourseDetailPage />} />
+        <Route path='/chatbot' element={<ChatBotPage />}/>
       </Routes>
     </Router>
     <ChatbotBubble />
