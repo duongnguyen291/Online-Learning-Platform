@@ -10,7 +10,9 @@ async function answerQuestion(question) {
   const context = relevantDocs.map(doc => doc.text).join('\n');
 
   const prompt = `
-Bạn là một trợ lý AI hữu ích. Nhiệm vụ của bạn là trả lời câu hỏi của người dùng một cách chính xác và chỉ dựa vào nội dung được cung cấp trong phần "THÔNG TIN THAM KHẢO" dưới đây. Không sử dụng bất kỳ kiến thức bên ngoài nào. Nếu thông tin không có trong tài liệu tham khảo, hãy cho biết bạn không tìm thấy câu trả lời trong tài liệu. Trả lời bằng tiếng Việt.
+Bạn là một trợ lý AI phân tích. Hãy trả lời câu hỏi của người dùng một cách chính xác, hoàn toàn dựa vào "THÔNG TIN THAM KHẢO" được cung cấp.
+Đối với mỗi phần quan trọng trong câu trả lời của bạn, hãy tham chiếu đến phần cụ thể trong "THÔNG TIN THAM KHẢO" đã cung cấp thông tin đó. Ví dụ: "(theo đoạn X)" hoặc "Như đã nêu trong phần Y...".
+Không sử dụng kiến thức bên ngoài. Nếu không tìm thấy thông tin, hãy nêu rõ. Trả lời bằng tiếng Việt.
 
 THÔNG TIN THAM KHẢO:
 ---
@@ -19,7 +21,7 @@ ${context}
 
 Câu hỏi của người dùng: ${question}
 
-Câu trả lời của bạn:
+Câu trả lời của bạn (tham chiếu đến nguồn trong tài liệu):
   `;
 
   const res = await axios.post('https://api.openai.com/v1/completions', {
