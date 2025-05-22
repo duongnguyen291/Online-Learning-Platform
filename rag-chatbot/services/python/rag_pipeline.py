@@ -11,7 +11,6 @@ A self-contained RAG pipeline that:
 """
 
 import os
-import argparse
 from dotenv import load_dotenv
 from pprint import pprint
 from typing import List
@@ -200,16 +199,11 @@ def main(file_path: str) -> None:
 # -----------------------------------------------------------------------------
 # Script Entry Point
 # -----------------------------------------------------------------------------
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Load & index a document via RAG pipeline"
-    )
-    parser.add_argument(
-        "--base-path",
-        required=True,
-        help="Path (with extension) to your document, e.g. ./docs/Chapter3.pdf",
-    )
-    args = parser.parse_args()
-    main(args.base_path)
+if __name__ == "__main__":    
+    rag_file_path = os.getenv('RAG_FILE_PATH')
+    if not rag_file_path:
+        raise ValueError("RAG_FILE_PATH environment variable is not set")
+        
+    main(rag_file_path)
 
 

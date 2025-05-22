@@ -12,6 +12,7 @@ from vertexai.preview import tokenization
 from chunking_evaluation.chunking import ClusterSemanticChunker
 from chromadb.utils import embedding_functions
 import os
+from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
@@ -206,6 +207,7 @@ def count_tokens_for_gemini(str) -> int:
     return token_count
 
 
+load_dotenv(override=True)
 gemini_api_key = os.getenv("GOOGLE_API_KEY")
 os.environ["GOOGLE_API_KEY"] = gemini_api_key
 EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL", "models/text-embedding-004")

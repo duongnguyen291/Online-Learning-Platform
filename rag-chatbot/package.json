@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js",
-    "build-rag": "python3 services/python/rag_pipeline.py"
+    "build-rag": "python services/python/rag_pipeline.py",
+    "start": "node app.js"
   },
   "keywords": [],
   "author": "",
