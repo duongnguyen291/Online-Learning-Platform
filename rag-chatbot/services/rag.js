@@ -10,10 +10,16 @@ async function answerQuestion(question) {
   const context = relevantDocs.map(doc => doc.text).join('\n');
 
   const prompt = `
-    Trả lời câu hỏi dựa trên thông tin sau:
-    ${context}
+Bạn là một trợ lý AI hữu ích. Nhiệm vụ của bạn là trả lời câu hỏi của người dùng một cách chính xác và chỉ dựa vào nội dung được cung cấp trong phần "THÔNG TIN THAM KHẢO" dưới đây. Không sử dụng bất kỳ kiến thức bên ngoài nào. Nếu thông tin không có trong tài liệu tham khảo, hãy cho biết bạn không tìm thấy câu trả lời trong tài liệu. Trả lời bằng tiếng Việt.
 
-    Câu hỏi: ${question}
+THÔNG TIN THAM KHẢO:
+---
+${context}
+---
+
+Câu hỏi của người dùng: ${question}
+
+Câu trả lời của bạn:
   `;
 
   const res = await axios.post('https://api.openai.com/v1/completions', {
