@@ -1,7 +1,7 @@
 const { getEmbedding } = require('./embedding');
 const { searchSimilarDocuments } = require('./vectorSearch');
 const axios = require('axios');
-require('dotenv').config();
+require('dotenv').config({ path: '../.env' });
 
 async function answerQuestion(question) {
   const queryEmbedding = await getEmbedding(question);
