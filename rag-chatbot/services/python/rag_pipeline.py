@@ -1,46 +1,40 @@
 """
 rag_pipeline.py
-
 A self-contained RAG pipeline that:
-
-  1. Loads PDF/MD/TXT content
+  1. Loads PDF/MD/TXT content from a directory
   2. Cleans and chunks text
-  3. Generates embeddings via Google Generative AI
+  3. Generates embeddings via OpenAI
   4. Indexes vectors in MongoDB Atlas
-
 """
-
 import os
 from dotenv import load_dotenv
 from pprint import pprint
 from typing import List
-
 from pymongo import MongoClient
 from langchain.docstore.document import Document
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_mongodb import MongoDBAtlasVectorSearch
-
 from my_helper_function import (
     pdf_text_extract,
     md_text_extract,
     txt_text_extract,
     clean_text_basic,
     llm_clean_data,
-    count_tokens_for_gemini,
+    count_tokens_for_openai,
     cluster_chunking,
 )
-
 # -----------------------------------------------------------------------------
 # Load environment
 # -----------------------------------------------------------------------------
 load_dotenv(override=True)
-
-MONGODB_URI_CHAT_BOT          = os.getenv("MONGODB_URI_CHAT_BOT")
-DB_NAME              = os.getenv("DB_NAME_CHAT_BOT")
-COLLECTION_NAME      = os.getenv("COLLECTION_NAME_CHAT_BOT")
-INDEX_NAME           = os.getenv("MONGODB_INDEX_NAME", "vector_index")
-EMBEDDING_MODEL      = os.getenv("EMBEDDING_MODEL", "models/text-embedding-004")
-VECTOR_DIMENSIONS    = int(os.getenv("VECTOR_DIMENSIONS", "768"))
+MONGODB_URI_CHAT_BOT       = os.getenv("MONGODB_URI_CHAT_BOT")
+DB_NAME                    = os.getenv("DB_NAME_CHAT_BOT")
+COLLECTION_NAME            = os.getenv("COLLECTION_NAME_CHAT_BOT")
+INDEX_NAME                 = os.getenv("MONGODB_INDEX_NAME", "vector_index")
+EMBEDDING_MODEL            = os.getenv("EMBEDDING_MODEL", "text-embedding-ada-002")
+VECTOR_DIMENSIONS          = int(os.getenv("VECTOR_DIMENSIONS", "1536"))
+RAG_DIR_PATH               = os.getenv('RAG_DIR_PATH')
+SUPPORTED_EXTENSIONS       = {'.pdf', '.md', '.txt'}
 
 if not MONGODB_URI_CHAT_BOT or not DB_NAME or not COLLECTION_NAME or not INDEX_NAME:
     raise ValueError("Environment variable must be set")
@@ -49,27 +43,8 @@ if not MONGODB_URI_CHAT_BOT or not DB_NAME or not COLLECTION_NAME or not INDEX_N
 # Format-aware Loader
 # -----------------------------------------------------------------------------
 def load_text_by_extension(path: str) -> str:
-    """
-    Load the contents of a file based on its extension.
-
-    Supported formats:
-      - .pdf → pdf_text_extract
-      - .md  → md_text_extract
-      - .txt → txt_text_extract
-
-    Args:
-        path: Path to the document including extension.
-
-    Returns:
-        Raw text extracted from the document.
-
-    Raises:
-        ValueError: If the extension is not among supported formats.
-        FileNotFoundError: If the file does not exist.
-    """
     if not os.path.isfile(path):
         raise FileNotFoundError(f"Document not found: {path}")
-
     ext = os.path.splitext(path)[1].lower()
     if ext == ".pdf":
         return pdf_text_extract(path)
@@ -83,22 +58,7 @@ def load_text_by_extension(path: str) -> str:
 # -----------------------------------------------------------------------------
 # Cleaning & Chunking
 # -----------------------------------------------------------------------------
-
 def clean_and_condense(raw: str) -> str:
-    """
-    Clean text and remove PDF code-fence noise.
-
-    Steps:
-      1. Normalize whitespace, remove artifacts via clean_text
-      2. Further strip PDF-specific formatting via clean_pdf_data
-      3. Trim leading ```plaintext fence if present
-
-    Args:
-        raw: Raw text extracted from the source.
-
-    Returns:
-        A cleaned, condensed string ready for chunking.
-    """
     basic_cleaned = clean_text_basic(raw)
     condensed = llm_clean_data(basic_cleaned)
     fence = "\n```plaintext\n"
@@ -110,100 +70,73 @@ def clean_and_condense(raw: str) -> str:
 # Diagnostics
 # -----------------------------------------------------------------------------
 def report_token_counts(raw: str, cleaned: str, condensed: str) -> None:
-    """
-    Prints token counts for monitoring compression efficiency.
-
-    Args:
-        raw: Original raw text.
-        cleaned: After general cleaning.
-        condensed: After PDF-specific condensation.
-    """
     print("Token counts:")
-    print(f"  • Raw:       {count_tokens_for_gemini(raw)}")
-    print(f"  • Cleaned:   {count_tokens_for_gemini(cleaned)}")
-    print(f"  • Condensed: {count_tokens_for_gemini(condensed)}\n")
-
+    print(f"  • Raw:       {count_tokens_for_openai(raw)}")
+    print(f"  • Cleaned:   {count_tokens_for_openai(cleaned)}")
+    print(f"  • Condensed: {count_tokens_for_openai(condensed)}\n")
 
 # -----------------------------------------------------------------------------
-# Vector Store Encoding
+# Vector Store Initialization
 # -----------------------------------------------------------------------------
-
-def encode_cleaned_text(text: str, source_file_path: str) -> MongoDBAtlasVectorSearch:
-    """
-    Chunks, embeds, and indexes `text` into MongoDB Atlas Vector Search.
-
-    Args:
-        text: Full cleaned text to index.
-
-    Returns:
-        Populated MongoDBAtlasVectorSearch instance.
-    """
-    # Connect & clear old data
+def init_vector_store():
     client = MongoClient(MONGODB_URI_CHAT_BOT)
-    coll   = client[DB_NAME][COLLECTION_NAME]
+    coll = client[DB_NAME][COLLECTION_NAME]
+    # Clear existing data
     coll.delete_many({})
 
-    # Prepare embedding + vector store
-    embeddings = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL)
+    embeddings = OpenAIEmbeddings(model=EMBEDDING_MODEL)
     vs = MongoDBAtlasVectorSearch(
         collection=coll,
         embedding=embeddings,
         index_name=INDEX_NAME,
         relevance_score_fn="cosine",
     )
-    vs.create_vector_search_index(dimensions=VECTOR_DIMENSIONS)
-
-    # Chunk & document wrap
-    docs = [
-        Document(page_content=chunk, metadata={"source": os.path.basename(source_file_path)}) # Use source_file_path
-        for chunk in cluster_chunking(text) # Remove the "for path in []"
-    ]
-
-    # Bulk add
-    if docs: # Only add if there are documents
-        vs.add_documents(docs)
-    else:
-        print(f"⚠️ No chunks generated for {source_file_path}, nothing to index.")
+    vs.create_vector_search_index()
     return vs
 
 # -----------------------------------------------------------------------------
-# Main Pipeline
+# Directory-based Pipeline
 # -----------------------------------------------------------------------------
-def main(file_path: str) -> None:
-    """
-    Orchestrates:
-      1. Format-aware loading
-      2. Cleaning & condensation
-      3. Token count reporting
-      4. Vector encoding
+def process_directory(dir_path: str) -> None:
+    if not os.path.isdir(dir_path):
+        raise NotADirectoryError(f"Directory not found: {dir_path}")
 
-    Args:
-        file_path: Path to .pdf, .md, or .txt file.
-    """
-    # 1) Load
-    raw = load_text_by_extension(file_path)
-    print(f"\n--- Loaded {file_path} ({len(raw)} characters) ---\n")
-    pprint(raw[:300])
+    vs = init_vector_store()
 
-    # 2) Clean & condense
-    cleaned   = clean_text_basic(raw)
-    condensed = clean_and_condense(raw)
+    for filename in os.listdir(dir_path):
+        ext = os.path.splitext(filename)[1].lower()
+        if ext not in SUPPORTED_EXTENSIONS:
+            print(f"Skipping unsupported file: {filename}")
+            continue
 
-    # 3) Diagnostics
-    report_token_counts(raw, cleaned, condensed)
+        file_path = os.path.join(dir_path, filename)
+        # 1. Load
+        raw = load_text_by_extension(file_path)
+        print(f"\n--- Loaded {file_path} ({len(raw)} characters) ---\n")
+        pprint(raw[:300])
 
-    # 4) Encode to vector store
-    vs = encode_cleaned_text(condensed, file_path) # Pass file_path
-    print(f"✅ Indexed {file_path} into vector store: {vs}")
+        # 2. Clean & condense
+        cleaned = clean_text_basic(raw)
+        condensed = clean_and_condense(raw)
+
+        # 3. Diagnostics
+        report_token_counts(raw, cleaned, condensed)
+
+        # 4. Chunk & index
+        docs = [
+            Document(page_content=chunk, metadata={"source": filename})
+            for chunk in cluster_chunking(condensed)
+        ]
+        if docs:
+            vs.add_documents(docs)
+            print(f"✅ Indexed {filename}")
+        else:
+            print(f"⚠️ No chunks generated for {filename}")
 
 # -----------------------------------------------------------------------------
 # Script Entry Point
 # -----------------------------------------------------------------------------
 if __name__ == "__main__":    
-    rag_file_path = os.getenv('RAG_FILE_PATH')
-    if not rag_file_path:
-        raise ValueError("RAG_FILE_PATH environment variable is not set")
-        
-    main(rag_file_path)
-
-
+    if not RAG_DIR_PATH:
+        raise ValueError("RAG_DIR_PATH environment variable is not set")
+    process_directory(RAG_DIR_PATH)

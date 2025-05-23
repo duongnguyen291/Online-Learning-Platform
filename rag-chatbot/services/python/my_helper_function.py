@@ -1,3 +1,8 @@
+"""
+This module provides utility functions for text extraction, cleaning, and processing for a RAG (Retrieval-Augmented Generation) system.
+It includes functions for handling various file formats, text cleaning, and AI-driven text processing.
+"""
+
 import re
 import markdown
 from bs4 import BeautifulSoup
@@ -8,27 +13,28 @@ from langchain.docstore.document import Document
 import pylcs
 import pandas as pd
 import textwrap
-from vertexai.preview import tokenization
+from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
+from langchain.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 from chunking_evaluation.chunking import ClusterSemanticChunker
 from chromadb.utils import embedding_functions
-import os
-from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import PromptTemplate
-from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
-
-
-
-
 
 ### EXTRACT RAW TEXT FROM VARIOUS FILES
-def pdf_text_extract(file_path): #changed function name here
+def pdf_text_extract(file_path):
+    """
+    Extracts text content from a PDF file.
+    
+    Args:
+        file_path (str): Path to the PDF file
+        
+    Returns:
+        str: Extracted text content or error message if extraction fails
+    """
     try:
         with open(file_path, "rb") as pdf_file:
             pdf_reader = PyPDF2.PdfReader(pdf_file)
-            documents = pdf_reader.pages  # Get all pages from the PDF
-
-            # Concatenate text from all pages
+            documents = pdf_reader.pages
             text = " ".join([doc.extract_text() for doc in documents])
         return text
     except FileNotFoundError:
@@ -36,117 +42,109 @@ def pdf_text_extract(file_path): #changed function name here
     except Exception as e:
         return f"An error occur: {e}"
 
-
 def md_text_extract(file_path):
     """
-    Extracts plain text from a Markdown file.
-
+    Extracts text content from a Markdown file by converting it to HTML and then extracting plain text.
+    
     Args:
-        file_path (str): The path to the Markdown file.
-
+        file_path (str): Path to the Markdown file
+        
     Returns:
-        str: The extracted plain text content.
+        str: Extracted text content or error message if extraction fails
     """
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             markdown_content = f.read()
-
-        # Convert Markdown to HTML
         html_content = markdown.markdown(markdown_content)
-
-        # Use BeautifulSoup to extract text from HTML
         soup = BeautifulSoup(html_content, 'html.parser')
         text = soup.get_text()
-
         return text.strip()
-
     except FileNotFoundError:
         return f"Error: File not found at '{file_path}'"
     except Exception as e:
         return f"An error occurred: {e}"
 
-
 def txt_text_extract(file_path):
     """
-    Extracts text from a .txt file.
-
+    Extracts text content from a plain text file.
+    
     Args:
-        file_path (str): The path to the .txt file.
-
+        file_path (str): Path to the text file
+        
     Returns:
-        str: The text content of the file, or None if the file does not exist or an error occurs.
+        str: Extracted text content or None if extraction fails
     """
-    # Check if the file exists
     if not os.path.exists(file_path):
         print(f"Error: File not found at {file_path}")
         return None
-
     try:
-        # Open the file in read mode ('r')
         with open(file_path, 'r', encoding='utf-8') as file:
-            # Read the entire content of the file into a string
             text = file.read()
             return text
     except Exception as e:
-        # Handle any potential errors during file processing
         print(f"An error occurred while reading the file: {e}")
         return None
 
-
-### BASIC DATA CLEANING: REMOVING NOTATIONS, ETC.
+### BASIC DATA CLEANING
 def clean_text_basic(text: str) -> str:
     """
-    Cleans the input text by removing unnecessary characters, extra spaces,
-    and standardizing formatting.  Handles common issues in OCR'd text.
-
+    Performs basic text cleaning operations including:
+    - ASCII encoding/decoding
+    - Removal of special characters
+    - Fixing hyphenation
+    - Standardizing spacing
+    - Handling ligatures
+    
     Args:
-        text (str): The text to be cleaned.
-
+        text (str): Input text to clean
+        
     Returns:
-        str: The cleaned text.
+        str: Cleaned text
     """
     if not text:
         return ""
-
-    # 1. Handle Unicode issues (remove non-ASCII, normalize) - More robust
     text = text.encode('ascii', 'ignore').decode('ascii')
-
-    # 2. Remove/replace control characters - handle newlines, tabs explicitly
-    text = text.replace('\t', ' ')  # Tabs to spaces
-    text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', text)  # Remove other control chars
-
-    # 3.  Handle common OCR errors and formatting issues
-    text = re.sub(r'(\w)-(\w)', r'\1\2', text)  # Remove hyphens between words
-    text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)  # Split concatenated words
-    text = re.sub(r'(\d)([a-zA-Z])', r'\1 \2', text)  # Split number-letter
-    text = re.sub(r'([a-zA-Z])(\d)', r'\1 \2', text)  # Split letter-number
-    text = re.sub(r' +', ' ', text)  # Remove extra spaces
-    text = text.strip() # Remove leading and trailing spaces
-
-    # 4. Fix common OCR errors (more comprehensive)
-    text = re.sub(r'ﬁ', 'fi', text)
-    text = re.sub(r'ﬀ', 'ff', text)
-    text = re.sub(r'ﬂ', 'fl', text)
-    text = re.sub(r'ﬃ', 'ffi', text)
-    text = re.sub(r'ﬄ', 'ffl', text)
-    text = re.sub(r'°', ' ', text)
-
-    # 5. Handle line breaks and whitespace
-    text = re.sub(r'\n+', '\n', text)  # Collapse multiple newlines
-    text = re.sub(r' +', ' ', text)  # Squeeze multiple spaces.
-
+    text = text.replace('\t', ' ')
+    text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', text)
+    text = re.sub(r'(\w)-(\w)', r'\1\2', text)
+    text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
+    text = re.sub(r'(\d)([a-zA-Z])', r'\1 \2', text)
+    text = re.sub(r'([a-zA-Z])(\d)', r'\1 \2', text)
+    text = re.sub(r' +', ' ', text)
+    text = text.strip()
+    text = re.sub(r'fi', 'fi', text)
+    text = re.sub(r'ff', 'ff', text)
+    text = re.sub(r'fl', 'fl', text)
+    text = re.sub(r'ffi', 'ffi', text)
+    text = re.sub(r'ffl', 'ffl', text)
+    text = re.sub(r'\u00b0', ' ', text)
+    text = re.sub(r'\n+', '\n', text)
+    text = re.sub(r' +', ' ', text)
     return text.strip()
-
 
 ### AI-DRIVEN DATA EXTRACTOR
 def llm_clean_data(text: str) -> str:
-    information_condenser_model = ChatGoogleGenerativeAI(
-        model = "gemini-2.5-pro-exp-03-25",
-        temperature = 0,
-        max_tokens=None,
-        timeout=None
+    """
+    Uses GPT-4 to clean and structure text for RAG systems.
+    Performs advanced cleaning including:
+    - Removing headers/footers
+    - Fixing line breaks and hyphenation
+    - Standardizing formatting
+    - Preserving document structure
+    - Handling special elements (tables, code blocks, equations)
+    
+    Args:
+        text (str): Raw text to clean
+        
+    Returns:
+        str: Cleaned and structured text optimized for RAG systems
+    """
+    information_condenser_model = ChatOpenAI(
+        model="gpt-4",
+        temperature=0
     )
 
+    # [Previous prompt template remains unchanged]
     condense_information_prompt_template = """
 You are an expert AI agent specializing in cleaning text extracted from PDF files to optimize its quality for use in a Retrieval-Augmented Generation (RAG) system. Your primary objective is to transform raw, often noisy text inside backticks into a clean, coherent, and highly informative format while meticulously preserving every piece of original information and its context.
 
@@ -174,47 +172,55 @@ Think step by step and justify your cleaning decisions based on the principles o
 ```
 {text}
 ```
-    """
+"""
 
     condense_information_prompt = PromptTemplate(template=condense_information_prompt_template, input_variables=["text"])
-
     string_output_parser = StrOutputParser()
 
     condense_chain = (
-        {"text": lambda x: x}  # Identity function to pass the text
+        {"text": lambda x: x}
         | condense_information_prompt
         | information_condenser_model
-        | string_output_parser # Use string output parser
+        | string_output_parser
     )
-    """
-    Condenses the input text using the Gemini LLM and LangChain.
-
-    Args:
-        text: The raw text to condense.
-
-    Returns:
-        A condensed and structured version of the text.
-    """
 
     return condense_chain.invoke(text)
 
+### TOKEN COUNTER FOR OPENAI
+def count_tokens_for_openai(text: str, model_name: str = "gpt-4") -> int:
+    """
+    Counts the number of tokens in a text string for a specific OpenAI model.
+    
+    Args:
+        text (str): Input text to count tokens for
+        model_name (str): OpenAI model name (default: "gpt-4")
+        
+    Returns:
+        int: Number of tokens in the text
+    """
+    enc = tiktoken.encoding_for_model(model_name)
+    return len(enc.encode(text))
 
-### TOKEN COUNTER FOR GEMINI
-def count_tokens_for_gemini(str) -> int:
-    model_name = "gemini-1.5-pro-002"
-    tokenizer = tokenization.get_tokenizer_for_model(model_name)
-    token_count = tokenizer.count_tokens(str)
-    return token_count
-
-
+# Initialize environment variables and embedding function
 load_dotenv(override=True)
-gemini_api_key = os.getenv("GOOGLE_API_KEY")
-os.environ["GOOGLE_API_KEY"] = gemini_api_key
-EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL", "models/text-embedding-004")
-embedding_function = embedding_functions.GoogleGenerativeAiEmbeddingFunction(api_key = os.environ["GOOGLE_API_KEY"], model_name=EMBEDDING_MODEL_NAME)
-
+openai_api_key = os.getenv("OPENAI_API_KEY")
+os.environ["OPENAI_API_KEY"] = openai_api_key
+EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL", "text-embedding-ada-002")
+embedding_function = embedding_functions.OpenAIEmbeddingFunction(
+    api_key=os.environ["OPENAI_API_KEY"],
+    model_name=EMBEDDING_MODEL_NAME
+)
 
 def cluster_chunking(str_text):
+    """
+    Splits text into semantic chunks using clustering.
+    
+    Args:
+        str_text (str): Input text to chunk
+        
+    Returns:
+        list: List of text chunks
+    """
     cluster_chunker = ClusterSemanticChunker(
         embedding_function=embedding_function,
         max_chunk_size = 400
