@@ -166,6 +166,7 @@
 .user-message {
   align-self: flex-end;
   flex-direction: row-reverse;
+  max-width: 90%; /* Increase user message width */
 }
 
 .ai-message {
@@ -200,6 +201,7 @@
   overflow-wrap: break-word;
   position: relative;
   box-shadow: 0 1px 2px var(--shadow-color);
+  width: 100%; /* Make message content take full width */
 }
 
 .user-message .message-content {
@@ -232,6 +234,7 @@
 .message-text {
   font-size: 0.95rem;
   line-height: 1.4;
+  white-space: pre-wrap; /* Preserve line breaks */
 }
 
 /* Image styling */
@@ -266,6 +269,7 @@
   width: 85%;
   position: relative;
   display: flex;
+  align-items: center; /* Center items vertically */
   background-color: var(--input-bg);
   border-radius: 24px;
   padding: 8px 8px 8px 16px;
@@ -283,6 +287,7 @@ textarea {
   max-height: 120px;
   background: transparent;
   padding-right: 110px; /* Space for buttons */
+  line-height: 1.4;
 }
 
 .camera-button,
@@ -296,7 +301,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
   margin-left: 4px;
   color: var(--primary-color);
 }
@@ -483,4 +488,39 @@ textarea {
     width: 16px;
     height: 16px;
   }
+}
+
+.message-sources {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.message-sources h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.source-item {
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.source-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.source-item p {
+  margin: 0 0 5px 0;
+  font-size: 14px;
+}
+
+.source-item small {
+  color: #666;
+  font-size: 12px;
 }

@@ -1,10 +1,68 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Chatbot.css';
 
+// API functions
+const API_BASE_URL = 'http://localhost:8000/api/rag';
+
+const uploadDocument = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  const response = await fetch(`${API_BASE_URL}/upload`, {
+    method: 'POST',
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to upload document');
+  }
+  
+  return response.json();
+};
+
+const queryRAG = async (message, context = null) => {
+  const response = await fetch(`${API_BASE_URL}/query`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      message,
+      context,
+    }),
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to get answer');
+  }
+  
+  return response.json();
+};
+
+const getContext = async (query) => {
+  const response = await fetch(`${API_BASE_URL}/context`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ query }),
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to get context');
+  }
+  
+  return response.json();
+};
+
 const Chatbot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [conversations, setConversations] = useState([
     { id: 'default', name: 'New conversation', messages: [] }
@@ -35,29 +93,195 @@ const Chatbot = () => {
     }
   }, [activeConversation, conversations]);
 
-  const handleCameraCapture = (e) => {
+  const handleCameraCapture = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+      try {
+        setIsUploading(true);
+        // Upload the file
+        const result = await uploadDocument(file);
+        
+        if (result.status === 'success') {
+          // Show preview
+          const reader = new FileReader();
+          reader.onload = () => {
+            setImagePreview(reader.result);
+          };
+          reader.readAsDataURL(file);
+          
+          // Add system message about successful upload
+          const systemMessage = {
+            id: Date.now().toString(),
+            content: `Successfully uploaded document: ${file.name}. You can now ask questions about it.`,
+            sender: 'ai',
+            timestamp: new Date()
+          };
+          
+          const updatedMessages = [...messages, systemMessage];
+          setMessages(updatedMessages);
+          
+          // Update conversation
+          const updatedConversations = conversations.map(conv => {
+            if (conv.id === activeConversation) {
+              return {
+                ...conv,
+                messages: updatedMessages
+              };
+            }
+            return conv;
+          });
+          
+          setConversations(updatedConversations);
+        } else {
+          // Handle error
+          const errorMessage = {
+            id: Date.now().toString(),
+            content: `Failed to upload document: ${result.message}`,
+            sender: 'ai',
+            timestamp: new Date()
+          };
+          
+          const updatedMessages = [...messages, errorMessage];
+          setMessages(updatedMessages);
+          
+          // Update conversation
+          const updatedConversations = conversations.map(conv => {
+            if (conv.id === activeConversation) {
+              return {
+                ...conv,
+                messages: updatedMessages
+              };
+            }
+            return conv;
+          });
+          
+          setConversations(updatedConversations);
+        }
+      } catch (error) {
+        // Handle API error
+        const errorMessage = {
+          id: Date.now().toString(),
+          content: `Error uploading document: ${error.message}`,
+          sender: 'ai',
+          timestamp: new Date()
+        };
+        
+        const updatedMessages = [...messages, errorMessage];
+        setMessages(updatedMessages);
+        
+        // Update conversation
+        const updatedConversations = conversations.map(conv => {
+          if (conv.id === activeConversation) {
+            return {
+              ...conv,
+              messages: updatedMessages
+            };
+          }
+          return conv;
+        });
+        
+        setConversations(updatedConversations);
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+      try {
+        setIsUploading(true);
+        // Upload the file
+        const result = await uploadDocument(file);
+        
+        if (result.status === 'success') {
+          // Show preview
+          const reader = new FileReader();
+          reader.onload = () => {
+            setImagePreview(reader.result);
+          };
+          reader.readAsDataURL(file);
+          
+          // Add system message about successful upload
+          const systemMessage = {
+            id: Date.now().toString(),
+            content: `Successfully uploaded document: ${file.name}. You can now ask questions about it.`,
+            sender: 'ai',
+            timestamp: new Date()
+          };
+          
+          const updatedMessages = [...messages, systemMessage];
+          setMessages(updatedMessages);
+          
+          // Update conversation
+          const updatedConversations = conversations.map(conv => {
+            if (conv.id === activeConversation) {
+              return {
+                ...conv,
+                messages: updatedMessages
+              };
+            }
+            return conv;
+          });
+          
+          setConversations(updatedConversations);
+        } else {
+          // Handle error
+          const errorMessage = {
+            id: Date.now().toString(),
+            content: `Failed to upload document: ${result.message}`,
+            sender: 'ai',
+            timestamp: new Date()
+          };
+          
+          const updatedMessages = [...messages, errorMessage];
+          setMessages(updatedMessages);
+          
+          // Update conversation
+          const updatedConversations = conversations.map(conv => {
+            if (conv.id === activeConversation) {
+              return {
+                ...conv,
+                messages: updatedMessages
+              };
+            }
+            return conv;
+          });
+          
+          setConversations(updatedConversations);
+        }
+      } catch (error) {
+        // Handle API error
+        const errorMessage = {
+          id: Date.now().toString(),
+          content: `Error uploading document: ${error.message}`,
+          sender: 'ai',
+          timestamp: new Date()
+        };
+        
+        const updatedMessages = [...messages, errorMessage];
+        setMessages(updatedMessages);
+        
+        // Update conversation
+        const updatedConversations = conversations.map(conv => {
+          if (conv.id === activeConversation) {
+            return {
+              ...conv,
+              messages: updatedMessages
+            };
+          }
+          return conv;
+        });
+        
+        setConversations(updatedConversations);
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!input.trim() && !imagePreview) return;
@@ -91,19 +315,72 @@ const Chatbot = () => {
     setImagePreview(null);
     setIsLoading(true);
     
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage = {
+    try {
+      // Get answer from RAG
+      const result = await queryRAG(input);
+      
+      if (result.status === 'success') {
+        const aiMessage = {
+          id: (Date.now() + 1).toString(),
+          content: result.answer,
+          sender: 'ai',
+          timestamp: new Date(),
+          sources: result.sources
+        };
+        
+        const finalMessages = [...updatedMessages, aiMessage];
+        setMessages(finalMessages);
+        
+        // Update conversation again with AI response
+        const finalConversations = updatedConversations.map(conv => {
+          if (conv.id === activeConversation) {
+            return {
+              ...conv,
+              messages: finalMessages
+            };
+          }
+          return conv;
+        });
+        
+        setConversations(finalConversations);
+      } else {
+        // Handle error
+        const errorMessage = {
+          id: (Date.now() + 1).toString(),
+          content: 'Sorry, I encountered an error while processing your request. Please try again.',
+          sender: 'ai',
+          timestamp: new Date()
+        };
+        
+        const finalMessages = [...updatedMessages, errorMessage];
+        setMessages(finalMessages);
+        
+        // Update conversation with error message
+        const finalConversations = updatedConversations.map(conv => {
+          if (conv.id === activeConversation) {
+            return {
+              ...conv,
+              messages: finalMessages
+            };
+          }
+          return conv;
+        });
+        
+        setConversations(finalConversations);
+      }
+    } catch (error) {
+      // Handle API error
+      const errorMessage = {
         id: (Date.now() + 1).toString(),
-        content: `This is a simulated response to: "${input}"${imagePreview ? ' (with an image)' : ''}`,
+        content: `Error: ${error.message}`,
         sender: 'ai',
         timestamp: new Date()
       };
       
-      const finalMessages = [...updatedMessages, aiMessage];
+      const finalMessages = [...updatedMessages, errorMessage];
       setMessages(finalMessages);
       
-      // Update conversation again with AI response
+      // Update conversation with error message
       const finalConversations = updatedConversations.map(conv => {
         if (conv.id === activeConversation) {
           return {
@@ -115,8 +392,9 @@ const Chatbot = () => {
       });
       
       setConversations(finalConversations);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleNewChat = () => {
@@ -280,12 +558,28 @@ const Chatbot = () => {
                         />
                       </div>
                     )}
+                    {message.sources && message.sources.length > 0 && (
+                      <div className="message-sources">
+                        <h4>Sources:</h4>
+                        {message.sources.map((source, index) => (
+                          <div key={index} className="source-item">
+                            <p>{source.content}</p>
+                            {source.metadata && (
+                              <small>
+                                {source.metadata.source && `Source: ${source.metadata.source}`}
+                                {source.metadata.page && `, Page: ${source.metadata.page}`}
+                              </small>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             ))
           )}
-          {isLoading && (
+          {(isLoading || isUploading) && (
             <div className="message ai-message">
               <div className="message-content">
                 <div className="message-header">
@@ -347,9 +641,8 @@ const Chatbot = () => {
             {/* File upload button */}
             <label className="file-upload-button">
               <input 
-                type="file" 
-                multiple 
-                accept="image/*"
+                type="file"
+                accept=".txt,.pdf,.doc,.docx"
                 onChange={handleFileUpload} 
               />
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -362,7 +655,7 @@ const Chatbot = () => {
             <button 
               type="submit" 
               className="send-button"
-              disabled={isLoading || (!input.trim() && !imagePreview)}
+              disabled={isLoading || isUploading || (!input.trim() && !imagePreview)}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13"></line>
