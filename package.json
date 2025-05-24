@@ -1,13 +1,16 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "For Hackathon of our college",
+  "description": "For our subject",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "server": "nodemon server.js",
+    "client": "cd client && npm start",
+    "rag": "cd server && uvicorn main:app --reload",
+    "dev": "concurrently \"npm run server\" \"npm run client\" \"npm run rag\""
   },
-  "author": "Himanshu Dinkar",
+  "author": "Nhom 1 SE",
   "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
@@ -27,5 +30,8 @@
     "nodemon": "^3.1.7",
     "socket.io": "^4.8.1",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }

@@ -35,11 +35,15 @@ class RAGService:
             raise ValueError("OPENAI_API_KEY not found in environment")
         
         self.embeddings = OpenAIEmbeddings(
-            openai_api_key=api_key
+            openai_api_key=api_key,
+            model="text-embedding-3-small"  # Specify the embedding model
         )
+        
+        # Initialize ChromaDB with OpenAI embeddings
         self.vector_store = Chroma(
             persist_directory="./data/chroma_db",
-            embedding_function=self.embeddings
+            embedding_function=self.embeddings,
+            collection_metadata={"hnsw:space": "cosine"}  # Use cosine similarity for text-embedding-3-small
         )
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,

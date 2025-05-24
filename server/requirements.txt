@@ -16,3 +16,7 @@ passlib==1.7.4
 bcrypt==4.3.0
 python-multipart==0.0.20
 httpx==0.28.1
+onnxruntime==1.22.0
+numpy==1.26.4
+chardet==5.2.0
+chromadb==1.0.10
