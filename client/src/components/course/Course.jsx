@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import './course.css';
+import '../../assets/css/course.css';
 import SearchBar from './Searchbar';
-import { coursesData, getAllCourses, courseCategories } from './courseData';
+import { coursesData, getAllCourses, courseCategories } from '../../assets/data/courseData';
 
 const Course = ({ title, rating, reviews, originalPrice, discountedPrice, image }) => {
   return (

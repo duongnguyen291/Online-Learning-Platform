@@ -1,8 +1,8 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import './courseDetail.css';
-import { coursesData, getAllCourses } from './courseData';
-import { getCourseDetail } from './courseDetailData';
+import '../../assets/css/courseDetail.css';
+import { coursesData, getAllCourses } from '../../assets/data/courseData';
+import { getCourseDetail } from '../../assets/data/courseDetailData';
 
 const CourseDetail = () => {
   const { id } = useParams();

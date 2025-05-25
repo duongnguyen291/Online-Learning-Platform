@@ -1,0 +1,196 @@
+/* User Avatar Section - Bên phải */
+.side-nav-items {
+    display: flex;
+    align-items: center;
+    gap: 50px;
+}
+
+.user-avatar-section {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.avatar-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    background-color: transparent;
+    white-space: nowrap; /* Giữ tên trên cùng một hàng */
+}
+
+.avatar-container:hover {
+    background-color: #f5f5f5;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: none; /* Bỏ viền */
+    flex-shrink: 0; /* Không cho ảnh bị co lại */
+}
+
+.user-name {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    white-space: nowrap; /* Tên không xuống hàng */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Hiển thị ... nếu tên quá dài */
+    max-width: 150px; /* Giới hạn độ rộng tối đa */
+}
+
+.dropdown-arrow {
+    transition: transform 0.3s ease;
+    color: #666;
+    flex-shrink: 0; /* Không cho mũi tên bị co lại */
+}
+
+.dropdown-arrow.open {
+    transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e0e0e0;
+    min-width: 220px;
+    z-index: 1000;
+    animation: fadeInDown 0.3s ease;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    text-decoration: none;
+    color: #333;
+    font-size: 14px;
+    font-weight: 400;
+    transition: all 0.2s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dropdown-item:first-child {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.dropdown-item:last-child {
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #4A1F1F;
+}
+
+.dropdown-item svg {
+    color: #666;
+    transition: color 0.2s ease;
+}
+
+.dropdown-item:hover svg {
+    color: #4A1F1F;
+}
+
+.dropdown-item.sign-out {
+    color: #dc3545;
+}
+
+.dropdown-item.sign-out:hover {
+    background-color: #fff5f5;
+    color: #dc3545;
+}
+
+.dropdown-item.sign-out svg {
+    color: #dc3545;
+}
+
+.dropdown-divider {
+    border: none;
+    border-top: 1px solid #e9ecef;
+    margin: 4px 0;
+}
+
+/* Animation cho dropdown */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .navbar-container {
+        padding: 0 15px;
+    }
+    
+    .nav-items {
+        gap: 30px;
+    }
+    
+    .nav-items .nav-link h3 {
+        font-size: 14px;
+    }
+    
+    .user-name {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar-container {
+        flex-direction: column;
+        gap: 15px;
+        padding: 10px;
+    }
+    
+    .user-avatar-section,
+    .logo-center,
+    .nav-items {
+        flex: none;
+    }
+    
+    .navbar-container {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+    
+    .nav-items {
+        gap: 20px;
+    }
+    
+    .nav-items .nav-link h3 {
+        font-size: 13px;
+    }
+    
+    .dropdown-menu {
+        right: 0;
+        left: auto;
+        min-width: 200px;
+    }
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './searchbar.css';
+import '../../assets/css/searchbar.css';
 
 const SearchBar = ({ allCourses, categories, onSearch }) => {
   const [searchTerm, setSearchTerm] = useState('');
