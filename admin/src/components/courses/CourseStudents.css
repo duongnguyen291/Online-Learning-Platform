@@ -1,0 +1,324 @@
+.course-students {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100vh;
+  background: white;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.students-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.header-title h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #1f2937;
+}
+
+.course-name {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.students-toolbar {
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  min-width: 300px;
+}
+
+.search-box input {
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  color: #1f2937;
+  width: 100%;
+}
+
+.search-box svg {
+  color: #6b7280;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.students-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  padding: 0 2rem;
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tab-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #6b7280;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  height: 100%;
+}
+
+.tab-button:hover {
+  color: #dc2626;
+}
+
+.tab-button.active {
+  color: #dc2626;
+  border-bottom-color: #dc2626;
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.students-table {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem 2rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  padding: 1rem;
+  color: #6b7280;
+  font-weight: 500;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  vertical-align: middle;
+}
+
+td {
+  padding: 1rem;
+  /* border-bottom: 1px solid #e5e7eb; */
+  color: #1f2937;
+  vertical-align: middle;
+}
+
+.student-name {
+  font-weight: 500;
+}
+
+.student-contact {
+  color: #6b7280;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.contact-info span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.student-message {
+  max-width: 300px;
+  color: #6b7280;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-badge.active {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.status-badge.inactive {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.progress-bar {
+  width: 150px;
+  height: 8px;
+  background-color: #f3f4f6;
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+  transition: width 0.3s ease;
+}
+
+.progress-bar span {
+  position: absolute;
+  right: -30px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex;
+  height: 100%; /* Thêm dòng này */
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-icon:hover {
+  background-color: #f3f4f6;
+}
+
+.btn-icon.approve {
+  color: #15803d;
+}
+
+.btn-icon.approve:hover {
+  background-color: #dcfce7;
+}
+
+.btn-icon.reject {
+  color: #b91c1c;
+}
+
+.btn-icon.reject:hover {
+  background-color: #fee2e2;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #374151;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+@media (max-width: 1024px) {
+  .students-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    min-width: auto;
+  }
+
+  .toolbar-actions {
+    justify-content: flex-end;
+  }
+
+  .students-table {
+    padding: 1rem;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .students-tabs {
+    padding: 0 1rem;
+    overflow-x: auto;
+  }
+} 

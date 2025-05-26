@@ -23,8 +23,41 @@ class AdminData {
         description: 'Khóa học về HTML, CSS, JavaScript và React',
         status: 'active',
         students: 156,
-        lessons: 24,
-        progress: 75
+        progress: 75,
+        chapters: [
+          {
+            id: 'chapter001',
+            title: 'Giới thiệu về Web Frontend',
+            description: 'Tổng quan về phát triển web và các công nghệ frontend',
+            lessons: [
+              {
+                id: 'lesson001',
+                title: 'Web hoạt động như thế nào?',
+                description: 'Giới thiệu về cách web browser và web server tương tác',
+                videoUrl: 'https://youtube.com/watch?v=example1'
+              },
+              {
+                id: 'lesson002',
+                title: 'HTML cơ bản',
+                description: 'Cấu trúc HTML và các thẻ thông dụng',
+                videoUrl: 'https://youtube.com/watch?v=example2'
+              }
+            ]
+          },
+          {
+            id: 'chapter002',
+            title: 'CSS và Styling',
+            description: 'Học cách tạo giao diện đẹp với CSS',
+            lessons: [
+              {
+                id: 'lesson003',
+                title: 'CSS Selectors',
+                description: 'Các cách chọn phần tử trong CSS',
+                videoUrl: 'https://youtube.com/watch?v=example3'
+              }
+            ]
+          }
+        ]
       },
       {
         id: 'course002',
@@ -32,17 +65,15 @@ class AdminData {
         description: 'Xây dựng API và database với Node.js và MongoDB',
         status: 'planning',
         students: 0,
-        lessons: 18,
-        progress: 30
-      },
-      {
-        id: 'course003',
-        title: 'Cơ bản lập trình',
-        description: 'Nhập môn lập trình với Python cho người mới bắt đầu',
-        status: 'completed',
-        students: 89,
-        lessons: 20,
-        progress: 100
+        progress: 30,
+        chapters: [
+          {
+            id: 'chapter003',
+            title: 'Giới thiệu Node.js',
+            description: 'Tổng quan về Node.js và môi trường phát triển',
+            lessons: []
+          }
+        ]
       }
     ];
 
@@ -60,13 +91,6 @@ class AdminData {
         type: 'completion',
         timestamp: new Date('2024-05-26T09:15:00'),
         read: false
-      },
-      {
-        id: 'notif003',
-        message: 'Lịch dạy tuần tới đã được cập nhật',
-        type: 'schedule',
-        timestamp: new Date('2024-05-25T16:45:00'),
-        read: false
       }
     ];
   }
@@ -78,8 +102,10 @@ class AdminData {
 
   // Cập nhật thông tin admin
   updateAdminInfo(updatedInfo) {
-    this.adminInfo = { ...this.adminInfo, ...updatedInfo };
-    this.updateStats();
+    this.adminInfo = {
+      ...this.adminInfo,
+      ...updatedInfo
+    };
     return this.adminInfo;
   }
 
@@ -99,9 +125,10 @@ class AdminData {
     const newCourse = {
       id: `course${String(this.courses.length + 1).padStart(3, '0')}`,
       ...courseData,
-      status: 'planning',
+      status: courseData.status || 'planning',
       students: 0,
-      progress: 0
+      progress: 0,
+      chapters: courseData.chapters || []
     };
     this.courses.push(newCourse);
     this.updateStats();
@@ -112,7 +139,11 @@ class AdminData {
   updateCourse(courseId, updatedData) {
     const courseIndex = this.courses.findIndex(course => course.id === courseId);
     if (courseIndex !== -1) {
-      this.courses[courseIndex] = { ...this.courses[courseIndex], ...updatedData };
+      this.courses[courseIndex] = {
+        ...this.courses[courseIndex],
+        ...updatedData,
+        chapters: updatedData.chapters || this.courses[courseIndex].chapters
+      };
       this.updateStats();
       return this.courses[courseIndex];
     }
@@ -130,18 +161,54 @@ class AdminData {
     return null;
   }
 
+  // Thêm học viên vào khóa học
+  addStudentToCourse(courseId, studentData) {
+    const course = this.courses.find(c => c.id === courseId);
+    if (course) {
+      course.students += 1;
+      this.updateStats();
+      return true;
+    }
+    return false;
+  }
+
+  // Xóa học viên khỏi khóa học
+  removeStudentFromCourse(courseId, studentId) {
+    const course = this.courses.find(c => c.id === courseId);
+    if (course && course.students > 0) {
+      course.students -= 1;
+      this.updateStats();
+      return true;
+    }
+    return false;
+  }
+
   // Lấy thông báo
   getNotifications() {
     return [...this.notifications];
   }
 
+  // Thêm thông báo mới
+  addNotification(message, type = 'info') {
+    const notification = {
+      id: `notif${String(this.notifications.length + 1).padStart(3, '0')}`,
+      message,
+      type,
+      timestamp: new Date(),
+      read: false
+    };
+    this.notifications.unshift(notification);
+    return notification;
+  }
+
   // Đánh dấu thông báo đã đọc
   markNotificationAsRead(notificationId) {
-    const notification = this.notifications.find(notif => notif.id === notificationId);
+    const notification = this.notifications.find(n => n.id === notificationId);
     if (notification) {
       notification.read = true;
+      return true;
     }
-    return notification;
+    return false;
   }
 
   // Đánh dấu tất cả thông báo đã đọc
@@ -149,20 +216,11 @@ class AdminData {
     this.notifications.forEach(notification => {
       notification.read = true;
     });
-    return this.notifications;
   }
 
-  // Thêm thông báo mới
-  addNotification(message, type = 'info') {
-    const newNotification = {
-      id: `notif${String(this.notifications.length + 1).padStart(3, '0')}`,
-      message,
-      type,
-      timestamp: new Date(),
-      read: false
-    };
-    this.notifications.unshift(newNotification);
-    return newNotification;
+  // Lấy số thông báo chưa đọc
+  getUnreadNotificationCount() {
+    return this.notifications.filter(n => !n.read).length;
   }
 
   // Cập nhật thống kê tự động
@@ -186,13 +244,16 @@ class AdminData {
     const searchTerm = query.toLowerCase();
     return this.courses.filter(course => 
       course.title.toLowerCase().includes(searchTerm) ||
-      course.description.toLowerCase().includes(searchTerm)
+      course.description.toLowerCase().includes(searchTerm) ||
+      course.chapters?.some(chapter =>
+        chapter.title.toLowerCase().includes(searchTerm) ||
+        chapter.description?.toLowerCase().includes(searchTerm) ||
+        chapter.lessons?.some(lesson =>
+          lesson.title.toLowerCase().includes(searchTerm) ||
+          lesson.description?.toLowerCase().includes(searchTerm)
+        )
+      )
     );
-  }
-
-  // Lấy số thông báo chưa đọc
-  getUnreadNotificationCount() {
-    return this.notifications.filter(notif => !notif.read).length;
   }
 
   // Reset dữ liệu về mặc định
@@ -218,7 +279,4 @@ class AdminData {
   }
 }
 
-// Singleton instance
-const adminData = new AdminData();
-
-export default adminData;
+export default new AdminData();

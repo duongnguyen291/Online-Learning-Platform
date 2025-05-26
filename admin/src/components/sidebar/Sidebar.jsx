@@ -2,8 +2,8 @@ import React from 'react';
 import { 
   BookOpen, 
   User, 
-  LogOut, 
-  GraduationCap 
+  LogOut,
+  GraduationCap
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -21,7 +21,7 @@ const Sidebar = ({ activeMenu, onMenuClick }) => {
     },
     {
       id: 'logout',
-      label: 'Logout',
+      label: 'Đăng xuất',
       icon: LogOut,
       isAction: true
     }
@@ -40,14 +40,15 @@ const Sidebar = ({ activeMenu, onMenuClick }) => {
         {menuItems.map((item) => {
           const IconComponent = item.icon;
           return (
-            <button
-              key={item.id}
-              className={`sidebar-item ${activeMenu === item.id ? 'active' : ''} ${item.isAction ? 'action-item' : ''}`}
-              onClick={() => onMenuClick(item.id)}
-            >
-              <IconComponent size={20} />
-              <span>{item.label}</span>
-            </button>
+            <div key={item.id} className="nav-item-group">
+              <button
+                className={`sidebar-item ${activeMenu === item.id ? 'active' : ''} ${item.isAction ? 'action-item' : ''}`}
+                onClick={() => onMenuClick(item.id)}
+              >
+                <IconComponent size={20} />
+                <span>{item.label}</span>
+              </button>
+            </div>
           );
         })}
       </nav>
