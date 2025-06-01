@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema({
         type:Date,
         required:true
     }
-})
+}, {versionKey: false})
 
 const Feedback = mongoose.model("Feedback",userSchema,'Feedback');
 module.exports=Feedback;

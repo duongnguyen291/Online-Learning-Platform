@@ -1,5 +1,3 @@
-// Copyright 2024 Himanshu
-// Project is undercopyright restrictions please read the LICENSE.txt file
 /*
 
 Copyright 2024 Himanshu Dinkar
@@ -17,26 +15,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const mongoose = require('mongoose');
+const WebSocket = require('ws');
 
-const chapterSchema = new mongoose.Schema({
+const wss = new WebSocket.Server({ port: 8080 });
+const clients = new Set();
 
-    chapterCode:{
-        type: String,
-        required: true,
-    },
-    name:{
-        type:String,
-        required:true
-    },
-    description:{
-        type:String
-    },
-    courseCode:{
-        type:String,
-        required:true
+wss.on('connection', (ws) => {
+  clients.add(ws);
+
+  ws.on('close', () => {
+    clients.delete(ws);
+  });
+});
+
+const notifyClients = (quiz) => {
+  clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(quiz));
     }
-}, {versionKey: false})
+  });
+};
 
-const Chapter = mongoose.model("Chapter",chapterSchema, 'Chapter');
-module.exports=Chapter;
+module.exports = { notifyClients };

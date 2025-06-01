@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema({
         type:String,
         required:true
     }
-})
+}, {versionKey: false})
 
 const Lesson = mongoose.model("lesson",userSchema, "Lesson");
 module.exports=Lesson;

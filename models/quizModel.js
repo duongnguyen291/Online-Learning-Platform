@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema({
         type:String,
         required:true
     }
-})
+}, {versionKey: false})
 
 const Quiz = mongoose.model("Quiz",userSchema,'Quiz');
 module.exports=Quiz;

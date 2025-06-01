@@ -18,6 +18,7 @@ limitations under the License.
 */
 
 const mongoose = require('mongoose');
+const {version} = require("mongoose");
 
 const userSchema = new mongoose.Schema({
 
@@ -44,9 +45,8 @@ const userSchema = new mongoose.Schema({
     Password:{
         type:String,
         required:true
-    },
-
-})
+    }
+}, {versionKey: false})
 
 const User = mongoose.model("User",userSchema,'User');
 module.exports=User;

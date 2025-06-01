@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema({
         type:Number,
         required:true
     }
-})
+}, {versionKey: false})
 
 const Submission = mongoose.model("Submission",userSchema,'Submission');
 module.exports=Submission;

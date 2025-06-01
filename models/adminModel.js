@@ -45,7 +45,7 @@ const adminSchema = new mongoose.Schema({
     enum:['Registrar','Director','Teacher'],
     default:'Director'
   }
-});
+}, {versionKey: false});
 
 const Admin = mongoose.model("admin", adminSchema, 'Admin');
 

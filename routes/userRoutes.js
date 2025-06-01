@@ -16,11 +16,12 @@ limitations under the License.
 */
 
 const express = require('express');
-const {register,loginUser, logoutUser}=require('../controllers/userController');
+const {register,loginUser, logoutUser, getCourses}=require('../controllers/userController');
 const userRouter = express.Router();
 
 userRouter.post('/register',register);
 userRouter.post('/login',loginUser);
 userRouter.post('/logout',logoutUser);
+userRouter.get('/my-course',getCourses);
 
 module.exports=userRouter;

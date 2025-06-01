@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema({
         type:Date,
         required:true
     }
-})
+}, {versionKey: false})
 
 const Notification = mongoose.model("Notification",userSchema,'Notification');
 module.exports=Notification;
