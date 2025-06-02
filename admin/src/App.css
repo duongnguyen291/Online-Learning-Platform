@@ -1,5 +1,66 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+@import '~antd/dist/antd.css';
+
+:root {
+  --primary-color: #dc2626;
+  --primary-hover: #ef4444;
+  --secondary-color: #ffffff;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --background-light: #f9fafb;
+  --border-color: #e5e7eb;
+}
 
 body {
-    font-family: "Nunito", sans-serif;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--background-light);
+}
+
+/* Override Ant Design default styles */
+.ant-layout {
+  background: var(--background-light) !important;
+}
+
+.ant-btn-primary {
+  background: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+.ant-btn-primary:hover {
+  background: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+}
+
+.ant-menu-item-selected {
+  background-color: var(--primary-color) !important;
+}
+
+.ant-menu-item:hover {
+  color: var(--primary-color) !important;
+}
+
+.ant-menu-item-selected {
+  color: white !important;
+}
+
+.ant-tabs-ink-bar {
+  background: var(--primary-color) !important;
+}
+
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--primary-color) !important;
+}
+
+.ant-tabs-tab:hover {
+  color: var(--primary-color) !important;
+}
+
+@media screen and (max-width: 768px) {
+  .ant-layout {
+    margin-left: 0 !important;
+  }
 }

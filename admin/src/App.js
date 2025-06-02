@@ -1,18 +1,30 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Layout } from 'antd';
+import Sidebar from './components/sidebar/Sidebar';
+import StudentList from './components/users/StudentList';
+import InstructorList from './components/users/InstructorList';
+import AdminProfile from './components/profile/AdminProfile';
 import './App.css';
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import AdminPanel from './components/menu/AdminPanel';
+
+const { Content } = Layout;
 
 function App() {
   return (
     <Router>
-      <Routes>
-        {/* Redirect root to admin panel */}
-        <Route path="/" element={<Navigate to="/admin" replace />} />
-        
-        {/* Admin routes */}
-        <Route path="/admin/*" element={<AdminPanel />} />
-      </Routes>
+      <Layout style={{ minHeight: '100vh' }}>
+        <Sidebar />
+        <Layout style={{ marginLeft: 150 }}>
+          <Content style={{ padding: '24px', minHeight: 280 }}>
+            <Routes>
+              <Route path="/students" element={<StudentList />} />
+              <Route path="/instructors" element={<InstructorList />} />
+              <Route path="/profile" element={<AdminProfile />} />
+              <Route path="/" element={<StudentList />} />
+            </Routes>
+          </Content>
+        </Layout>
+      </Layout>
     </Router>
   );
 }

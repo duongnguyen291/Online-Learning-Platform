@@ -1,0 +1,122 @@
+.user-list-container {
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-width: 900px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.user-list-container h2 {
+  margin-bottom: 24px;
+  color: var(--text-primary);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.user-list-tabs {
+  margin-bottom: 24px;
+}
+
+.user-list-tabs .ant-tabs-nav::before {
+  border-bottom: none;
+}
+
+.status-badge {
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.status-badge.pending {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fdba74;
+}
+
+.status-badge.active {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #6ee7b7;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-buttons .approve-btn {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.action-buttons .approve-btn:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.action-buttons .reject-btn {
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
+.action-buttons .reject-btn:hover {
+  color: white;
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.user-details {
+  padding: 24px;
+  background: var(--background-light);
+  border-radius: 8px;
+}
+
+.user-details p {
+  margin-bottom: 16px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.user-details strong {
+  color: var(--text-primary);
+  margin-right: 12px;
+  min-width: 120px;
+}
+
+.ant-table {
+  background: white;
+  border-radius: 8px;
+}
+
+.ant-table-thead > tr > th {
+  background: var(--background-light) !important;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.ant-modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ant-modal-header {
+  border-bottom: 1px solid var(--border-color);
+  padding: 20px 24px;
+}
+
+.ant-modal-title {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.ant-modal-footer {
+  border-top: 1px solid var(--border-color);
+  padding: 16px 24px;
+} 

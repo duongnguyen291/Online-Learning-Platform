@@ -1,70 +1,117 @@
 import React from 'react';
-import { 
-  BookOpen, 
-  User, 
-  LogOut,
-  GraduationCap
-} from 'lucide-react';
+import { Layout, Menu } from 'antd';
+import { GraduationCap } from 'lucide-react';
+
+import { UserOutlined, TeamOutlined, ProfileOutlined, LogoutOutlined } from '@ant-design/icons';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 
-const Sidebar = ({ activeMenu, onMenuClick }) => {
-  const menuItems = [
+const { Sider } = Layout;
+
+const Sidebar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Main menu items (excluding logout)
+  const mainMenuItems = [
     {
-      id: 'courses',
-      label: 'Khóa học của tôi',
-      icon: BookOpen
+      key: '/students',
+      icon: <TeamOutlined />,
+      label: 'Duyệt học viên',
     },
     {
-      id: 'profile',
-      label: 'Thông tin của tôi',
-      icon: User
+      key: '/instructors',
+      icon: <UserOutlined />,
+      label: 'Duyệt giảng viên',
     },
     {
-      id: 'logout',
-      label: 'Đăng xuất',
-      icon: LogOut,
-      isAction: true
-    }
+      key: '/profile',
+      icon: <ProfileOutlined />,
+      label: 'Thông tin cá nhân',
+    },
   ];
 
+  // Logout menu item
+  const logoutMenuItem = [
+    {
+      key: '/logout',
+      icon: <LogoutOutlined />,
+      label: 'Đăng xuất',
+    },
+  ];
+
+  const handleMenuClick = (item) => {
+    if (item.key === '/logout') {
+      // Handle logout logic here
+      console.log('Logging out...');
+      // You can add your logout logic here, such as:
+      // - Clear user session/tokens
+      // - Redirect to login page
+      // - Call logout API
+      return;
+    }
+    navigate(item.key);
+  };
+
+  const handleLogoutClick = (item) => {
+    if (item.key === '/logout') {
+      // Handle logout logic here
+      console.log('Logging out...');
+      // Add your logout logic here
+      return;
+    }
+  };
+
   return (
-    <div className="sidebar">
-      <div className="sidebar-header">
-        <div className="sidebar-logo">
-          <GraduationCap size={32} />
-          <h2>EduSmart</h2>
+    <Sider
+      width={280}
+      className="sidebar"
+      breakpoint="lg"
+      collapsedWidth="0"
+      style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}
+    >
+      <div className="logo">
+        <div className="logo-content">
+          <div className="logo-icon">
+            <GraduationCap size={32} />
+          </div>
+          <h1>EduSmart</h1>
         </div>
       </div>
       
-      <nav className="sidebar-nav">
-        {menuItems.map((item) => {
-          const IconComponent = item.icon;
-          return (
-            <div key={item.id} className="nav-item-group">
-              <button
-                className={`sidebar-item ${activeMenu === item.id ? 'active' : ''} ${item.isAction ? 'action-item' : ''}`}
-                onClick={() => onMenuClick(item.id)}
-              >
-                <IconComponent size={20} />
-                <span>{item.label}</span>
-              </button>
-            </div>
-          );
-        })}
-      </nav>
+      <div className="menu-container">
+        <Menu
+          theme="light"
+          mode="inline"
+          selectedKeys={[location.pathname]}
+          items={mainMenuItems}
+          onClick={handleMenuClick}
+        />
+      </div>
 
-      <div className="sidebar-footer">
-        <div className="teacher-info">
-          <div className="teacher-avatar">
-            <User size={16} />
+      {/* Bottom section with logout and user profile - fixed at bottom */}
+      <div className="sidebar-bottom">
+        <div className="logout-menu">
+          <Menu
+            theme="light"
+            mode="inline"
+            items={logoutMenuItem}
+            onClick={handleLogoutClick}
+            selectedKeys={[]} // No selection for logout
+          />
+        </div>
+
+        <div className="user-profile">
+          <div className="user-avatar">
+            G
           </div>
-          <div className="teacher-details">
-            <p className="teacher-name">Giảng viên</p>
-            <p className="teacher-role">Educator</p>
+          <div className="user-info">
+            <h3>Quản trị viên</h3>
+            <p>ADMIN</p>
           </div>
         </div>
       </div>
-    </div>
+    </Sider>
   );
 };
 
