@@ -1,3 +1,5 @@
+// Copyright 2024 Himanshu
+// Project is undercopyright restrictions please read the LICENSE.txt file
 /*
 
 Copyright 2024 Himanshu Dinkar
@@ -16,19 +18,30 @@ limitations under the License.
 */
 
 const mongoose = require('mongoose');
-const messageSchema = new mongoose.Schema({
-    sender:{
-        type:String,
-        required:true,
+
+const userSchema = new mongoose.Schema({
+
+    LessonCode:{
+        type: String,
+        required: true,
     },
-    content:{
+    LessonDes:{
         type:String,
         required:true
     },
-    timestamp: { type: Date, default: Date.now },
+    CourseCode:{
+        type:String,
+        required:true
+    },
+    ChapterCode:{
+        type:String,
+        required:true
+    },
+    url:{
+        type:String,
+        required:true
+    }
 }, {versionKey: false})
 
-
-const Message = mongoose.model('message',messageSchema, 'Message');
-
-module.exports=Message;
+const Lesson = mongoose.model("lesson",userSchema, "Lesson");
+module.exports=Lesson;

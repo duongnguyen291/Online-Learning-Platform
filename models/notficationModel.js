@@ -1,3 +1,5 @@
+// Copyright 2024 Himanshu
+// Project is undercopyright restrictions please read the LICENSE.txt file
 /*
 
 Copyright 2024 Himanshu Dinkar
@@ -16,19 +18,26 @@ limitations under the License.
 */
 
 const mongoose = require('mongoose');
-const messageSchema = new mongoose.Schema({
-    sender:{
-        type:String,
-        required:true,
+
+const userSchema = new mongoose.Schema({
+
+    NotificationCode:{
+        type: String,
+        required: true,
     },
-    content:{
+    NotificationDes:{
         type:String,
         required:true
     },
-    timestamp: { type: Date, default: Date.now },
+    UserCode:{
+        type:String,
+        required:true
+    },
+    NotificationDate:{
+        type:Date,
+        required:true
+    }
 }, {versionKey: false})
 
-
-const Message = mongoose.model('message',messageSchema, 'Message');
-
-module.exports=Message;
+const Notification = mongoose.model("Notification",userSchema,'Notification');
+module.exports=Notification;

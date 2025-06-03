@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const Admin = require('../models/adminModels');
+const Admin = require('../models/adminModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
