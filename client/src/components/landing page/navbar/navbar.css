@@ -70,3 +70,24 @@
 .signup-button:hover {
     color: rgb(148, 18, 18);
 }
+
+.user-email {
+  color: #333;
+  margin-right: 15px;
+  font-size: 14px;
+}
+
+.logout-button {
+  background-color: #BF2C2C;
+  color: white;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+  background-color: #a82d2d;
+}

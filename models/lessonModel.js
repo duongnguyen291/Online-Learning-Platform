@@ -21,28 +21,27 @@ const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
 
-    name:{
+    LessonCode:{
+        type: String,
+        required: true,
+    },
+    LessonDes:{
         type:String,
         required:true
     },
-    username:{
+    CourseCode:{
         type:String,
         required:true
     },
-    email:{
+    ChapterCode:{
         type:String,
         required:true
     },
-    password:{
+    url:{
         type:String,
         required:true
-    },
-    role:{
-      type:String,
-      enum:['admin','teacher','registrar','director'],
-      default:'admin'
     }
-})
+}, {versionKey: false})
 
-const User = mongoose.model("User",userSchema);
-module.exports=User;
+const Lesson = mongoose.model("lesson",userSchema, "Lesson");
+module.exports=Lesson;

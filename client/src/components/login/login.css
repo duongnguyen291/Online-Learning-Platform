@@ -1,4 +1,3 @@
-
 /* body {
     background-color: #c9d6ff;
     background: linear-gradient(to right, #e2e2e2, #c9d6ff);
@@ -248,4 +247,15 @@
 
 .sign-container.active .toggle-right {
     transform: translateX(200%);
+}
+
+.error-message {
+  color: #BF2C2C;
+  background-color: rgba(191, 44, 44, 0.1);
+  padding: 10px;
+  border-radius: 5px;
+  margin: 10px 0;
+  font-size: 14px;
+  text-align: center;
+  width: 100%;
 }

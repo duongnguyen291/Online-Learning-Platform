@@ -15,14 +15,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const User = require("../models/userModels");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+const User = require("../models/userModel");
+const Enrollment = require("../models/enrollmentModel");
+const {initUsersFile, writeUsersFile, readUsersFile, deleteUsersFile} = require("../controllers/userCredetialController")
+const fs = require("fs");
 
 const register = async (req, res) => {
-  const { name, username, email, password } = req.body;
+  const { userCode, name, role, DOB, login, password } = req.body;
   try {
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ Login: login });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -30,14 +31,13 @@ const register = async (req, res) => {
       });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashPassword = await bcrypt.hash(password, salt);
-
     const user = await User.create({
-      name,
-      username,
-      email,
-      password: hashPassword,
+      UserCode: userCode,
+      Name: name,
+      Role: role,
+      DOB: DOB,
+      Login: login,
+      Password: password
     });
 
     return res.status(201).json({
@@ -55,35 +55,36 @@ const register = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { login, password } =  req.body;
   try {
-    const user = await User.findOne({ email });
+    if (await readUsersFile()) {
+      return res.status(404).json({
+        success: false,
+        message: "Already signed in. Please Logout",
+      });
+    }
+    const user = await User.findOne({ Login: login });
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User does not Exist.Please Sign Up",
+        message: "User does not Exist. Please Sign Up",
       });
     }
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await(password === user.Password);
     if (!isValidPassword) {
       return res.status(401).json({
         success: false,
         message: "Invalid Credentials",
       });
     }
-    const token = jwt.sign(
-      { email: email, userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
 
-    res.cookie("token", token, {
-      httpOnly: true,
-    });
+    await initUsersFile();
+    await writeUsersFile(req.body);
+
 
     return res.status(200).json({
       success: true,
-      token,
+      login, password,
       message: "Login Successfull",
     });
   } catch (error) {
@@ -97,8 +98,7 @@ const loginUser = async (req, res) => {
 
 const logoutUser = async (req, res) => {
   try {
-    // Xóa cookie chứa token
-    res.clearCookie('token');
+    await deleteUsersFile();
 
     return res.status(200).json({
       success: true,
@@ -113,4 +113,35 @@ const logoutUser = async (req, res) => {
   }
 };
 
-module.exports = { register, loginUser, logoutUser };
+const getCourses = async (req, res) => {
+  try {
+    if (!await readUsersFile()) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+    const { login, password } = await JSON.parse(fs.readFileSync('controllers/users.json'));
+    console.log(login);
+
+    const user = await User.findOne({Login: login});
+    console.log(user.UserCode);
+    const userCode = user.UserCode;
+
+    const enrollments = await Enrollment.find({ UserCode: userCode });
+    console.log(enrollments);
+    const courseCodes = enrollments.map(e => e.CourseCode);
+
+    return res.status(200).json({
+      success: true,
+      courseCodes,
+      message: "Fetched enrolled courses",
+    });
+  } catch (error) {
+    console.error("Error fetching courses:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
+module.exports = { register, loginUser, logoutUser, getCourses};

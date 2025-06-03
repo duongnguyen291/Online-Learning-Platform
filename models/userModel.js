@@ -1,3 +1,5 @@
+// Copyright 2024 Himanshu
+// Project is undercopyright restrictions please read the LICENSE.txt file
 /*
 
 Copyright 2024 Himanshu Dinkar
@@ -16,19 +18,35 @@ limitations under the License.
 */
 
 const mongoose = require('mongoose');
-const messageSchema = new mongoose.Schema({
-    sender:{
-        type:String,
-        required:true,
+const {version} = require("mongoose");
+
+const userSchema = new mongoose.Schema({
+
+    UserCode:{
+        type: String,
+        required: true,
     },
-    content:{
+    Name:{
         type:String,
         required:true
     },
-    timestamp: { type: Date, default: Date.now },
+    Role:{
+        type:String,
+        required:true
+    },
+    DOB:{
+        type:Date,
+        required:true
+    },
+    Login:{
+        type:String,
+        required:true
+    },
+    Password:{
+        type:String,
+        required:true
+    }
 }, {versionKey: false})
 
-
-const Message = mongoose.model('message',messageSchema, 'Message');
-
-module.exports=Message;
+const User = mongoose.model("User",userSchema,'User');
+module.exports=User;

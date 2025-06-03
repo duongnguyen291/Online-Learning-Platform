@@ -1,3 +1,5 @@
+// Copyright 2024 Himanshu
+// Project is undercopyright restrictions please read the LICENSE.txt file
 /*
 
 Copyright 2024 Himanshu Dinkar
@@ -15,38 +17,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+const mongoose = require('mongoose');
 
-const mongoose = require("mongoose");
+const chapterSchema = new mongoose.Schema({
 
-const adminSchema = new mongoose.Schema({
-  directorName: {
-    type: String,
-    required: true,
-  },
-  collegeName: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
-  },
-  centerCode:{
-    type:Number,
-    required:true
-  },
-  
-  password: {
-    type: String,
-    required: true,
-  },
-  role:{
-    type:String,
-    enum:['Registrar','Director','Teacher'],
-    default:'Director'
-  }
-});
+    chapterCode:{
+        type: String,
+        required: true,
+    },
+    name:{
+        type:String,
+        required:true
+    },
+    description:{
+        type:String
+    },
+    courseCode:{
+        type:String,
+        required:true
+    }
+}, {versionKey: false})
 
-const Admin = mongoose.model("admin", adminSchema);
-
-module.exports = Admin;
+const Chapter = mongoose.model("Chapter",chapterSchema, 'Chapter');
+module.exports=Chapter;
