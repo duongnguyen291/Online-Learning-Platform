@@ -1,0 +1,123 @@
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.dashboard-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  color: #1f2937;
+  margin: 0 0 1.5rem 0;
+}
+
+.progress-circle {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.circular-chart {
+  width: 150px;
+  height: 150px;
+  transform: rotate(-90deg);
+}
+
+.circular-chart path:nth-child(2) {
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.5s ease;
+}
+
+.circular-chart text {
+  transform: rotate(90deg);
+  font-size: 8px;
+  font-weight: 600;
+  fill: #1f2937;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.top-performers {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.performer-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.performer-item:hover {
+  transform: translateX(4px);
+  background: #f3f4f6;
+}
+
+.performer-rank {
+  width: 32px;
+  height: 32px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #dc2626;
+  border: 2px solid #fecaca;
+}
+
+.performer-info {
+  flex: 1;
+}
+
+.performer-info h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.performer-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.stat-icon.active {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+
+.stat-icon.pending {
+  background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
+}
+
+.stat-icon.inactive {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .performer-stats {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+} 

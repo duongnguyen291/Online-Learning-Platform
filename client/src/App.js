@@ -8,9 +8,9 @@ import CourseDetailPage from './pages/CourseDetailPage';
 import VideoCoursePage from './pages/VideoCourse';
 import ChatbotBubble from './components/chatbot/ChatbotBubble';
 import ChatBotPage from './pages/ChatBotPage';
-import ProfileStudent from './pages/ProfileStudent';
 import InnerCoursePage from './pages/InnerCoursePage';
-
+import MyCoursesPage from './pages/MyCoursesPage';
+import StudentProfilePage from './pages/StudentProfilePage';
 function App() {
   return (
     <>
@@ -21,10 +21,11 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/courses" element={<CoursePage />} />
         <Route path='/course/:id' element={<CourseDetailPage />} />
-        <Route path='/coursecourse' element={<InnerCoursePage />} />
+        <Route path='/courseInner' element={<InnerCoursePage />} />
         <Route path='/courseDetails' element={<VideoCoursePage />} />
         <Route path='/chatbot' element={<ChatBotPage />}/>
-        <Route path='/profile' element={<ProfileStudent />}/>
+        <Route path='/my-courses' element={<MyCoursesPage />}/>
+        <Route path='/profile' element={<StudentProfilePage />}/>
       </Routes>
     </Router>
     <ChatbotBubble />

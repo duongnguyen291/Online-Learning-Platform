@@ -1,174 +1,315 @@
-import React, { useState, useEffect } from 'react';
-import { getCurrentStudent } from '../../assets/data/student';
-import { FaFacebook, FaLinkedin, FaGithub, FaInstagram, FaBehance, FaTwitter } from 'react-icons/fa';
-import './studentProfile.css';
+import React, { useState } from 'react';
+import {
+  Email,
+  Phone,
+  LocationOn,
+  School,
+  Info,
+  Person,
+  Edit,
+  Camera,
+  Save,
+  Cancel,
+  Lock
+} from '@mui/icons-material';
+import './StudentProfile.css';
 
 const StudentProfile = () => {
-  const [student, setStudent] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face');
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: 'Nguyễn Văn An',
+    email: 'nguyenvanan@gmail.com',
+    phone: '0123456789',
+    address: 'Quận Hai Bà Trưng, Hà Nội',
+    major: 'Công nghệ thông tin',
+    status: 'Đang học',
+    bio: 'Sinh viên năm 3 chuyên ngành Công nghệ thông tin, đam mê lập trình web và phát triển ứng dụng di động. Luôn tìm tòi học hỏi công nghệ mới và ứng dụng vào thực tế.',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
 
-  useEffect(() => {
-    // Lấy thông tin học viên hiện tại
-    const currentStudent = getCurrentStudent();
-    setStudent(currentStudent);
-  }, []);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-  if (!student) {
-    return <div className="loading">Đang tải thông tin học viên...</div>;
-  }
-
-  const getSocialIcon = (platform) => {
-    switch (platform) {
-      case 'facebook':
-        return <FaFacebook />;
-      case 'linkedin':
-        return <FaLinkedin />;
-      case 'github':
-        return <FaGithub />;
-      case 'instagram':
-        return <FaInstagram />;
-      case 'behance':
-        return <FaBehance />;
-      case 'twitter':
-        return <FaTwitter />;
-      default:
-        return null;
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => setAvatarUrl(e.target.result);
+      reader.readAsDataURL(file);
     }
   };
 
+  const handleSave = () => {
+    console.log('Saving data:', formData);
+    setIsEditing(false);
+    setShowPasswordChange(false);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setShowPasswordChange(false);
+  };
+
+  const getStatusChip = (status) => {
+    const statusClasses = {
+      'Đang học': 'sp-status-active',
+      'Tạm nghỉ': 'sp-status-inactive',
+      'Đã tốt nghiệp': 'sp-status-graduated'
+    };
+    
+    return (
+      <span className={`sp-status-chip ${statusClasses[status] || ''}`}>
+        {status}
+      </span>
+    );
+  };
+
   return (
-    <div className="student-profile">
-
-      <div className="profile-container">
-        {/* Left Sidebar */}
-        <div className="profile-sidebar">
-          <div className="profile-card">
-            <div className="profile-avatar">
-              <img src="/api/placeholder/120/120" alt={student.name} />
-            </div>
-            <h2 className="profile-name">{student.name}</h2>
+    <div className="sp-container">
+      <div className="sp-wrapper">
+        <h1 className="sp-page-title">Hồ Sơ Học Viên</h1>
+        
+        <div className="sp-profile-card">
+          <div className="sp-avatar-section">
+            {!isEditing && (
+              <button className="sp-edit-btn" onClick={() => setIsEditing(true)}>
+                <Edit fontSize="small" /> Chỉnh sửa
+              </button>
+            )}
             
-            <div className="profile-stats">
-              <div className="stat-item">
-                <span className="stat-label">Total Course</span>
-                <span className="stat-value">{student.enrolledCourses.length}</span>
-              </div>
-              
-              <div className="stat-item">
-                <span className="stat-label">Ratings</span>
-                <div className="rating">
-                  <span className="rating-star">★</span>
-                  <span className="rating-value">{student.gpa}</span>
-                  <span className="rating-count">({student.completedCredits})</span>
-                </div>
-              </div>
-              
-              <div className="stat-item">
-                <span className="stat-label">Experiences</span>
-                <span className="stat-value">{student.currentSemester} Semesters</span>
-              </div>
-              
-              <div className="stat-item">
-                <span className="stat-label">Graduated</span>
-                <span className="stat-value">{student.status === 'Đang học' ? 'No' : 'Yes'}</span>
-              </div>
-              
-              <div className="stat-item">
-                <span className="stat-label">Language</span>
-                <span className="stat-value">Vietnamese</span>
-              </div>
-              
-              <div className="stat-item">
-                <span className="stat-label">Social</span>
-                <div className="social-links">
-                  {Object.entries(student.socialLinks).map(([platform, url]) => (
-                    <a key={platform} href={url} target="_blank" rel="noopener noreferrer" className={`social-icon ${platform}`}>
-                      {getSocialIcon(platform)}
-                    </a>
-                  ))}
-                </div>
-              </div>
+            <div className="sp-avatar-container">
+              <img src={avatarUrl} alt="Avatar" className="sp-avatar" />
+              {isEditing && (
+                <label htmlFor="avatar-upload" className="sp-avatar-overlay">
+                  <Camera fontSize="large" />
+                  <input
+                    type="file"
+                    id="avatar-upload"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              )}
             </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="profile-content">
-          {/* About Section */}
-          <div className="content-section">
-            <h3>About {student.name.split(' ')[0]}</h3>
-            <p>{student.bio}</p>
-            <p>
-              Sinh viên chuyên ngành {student.major}, hiện đang học kỳ {student.currentSemester}. 
-              Có GPA {student.gpa} và đã hoàn thành {student.completedCredits}/{student.totalCredits} tín chỉ.
-            </p>
-            <p>
-              Địa chỉ: {student.address}<br/>
-              Email: {student.email}<br/>
-              Điện thoại: {student.phone}
-            </p>
-          </div>
-
-          {/* Certification Section */}
-          <div className="content-section">
-            <h3>Certification</h3>
-            <div className="certificates">
-              {student.certificates.map((cert) => (
-                <div key={cert.id} className="certificate-item">
-                  <h4>{cert.name}</h4>
-                  <p>Issued: {new Date(cert.issueDate).toLocaleDateString('vi-VN')}</p>
-                  <p>Score: {cert.score}/100</p>
-                </div>
-              ))}
+            
+            <div className="sp-student-name">
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  className="sp-name-input"
+                />
+              ) : (
+                formData.fullName
+              )}
             </div>
           </div>
 
-          {/* Courses Section */}
-          <div className="content-section">
-            <h3>Courses ({student.enrolledCourses.length})</h3>
-            <div className="courses-list">
-              {student.enrolledCourses.map((course, index) => (
-                <div key={course.courseId} className="course-item">
-                  <div className="course-image">
-                    <img src="/api/placeholder/80/80" alt={course.courseName} />
+          <div className="sp-info-section">
+            {!isEditing ? (
+              <div className="sp-info-grid">
+                <div className="sp-info-row">
+                  <div className="sp-info-icon">
+                    <Email />
                   </div>
-                  <div className="course-info">
-                    <h4>{course.courseName}</h4>
-                    <p className="course-category">{student.major} - Course</p>
-                    <p className="course-description">
-                      Khóa học {course.courseName} với tiến độ hoàn thành {course.progress}%. 
-                      {course.grade && ` Điểm đạt được: ${course.grade}`}
-                    </p>
-                    <div className="course-price">
-                      <span className="current-price">$ 380</span>
-                      <span className="old-price">$ 500</span>
-                    </div>
-                    <div className="course-progress">
-                      <div className="progress-bar">
-                        <div 
-                          className="progress-fill" 
-                          style={{ width: `${course.progress}%` }}
-                        ></div>
-                      </div>
-                      <span className="progress-text">{course.progress}%</span>
-                    </div>
+                  <div className="sp-info-content">
+                    <div className="sp-info-label">Email</div>
+                    <div className="sp-info-value">{formData.email}</div>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                <div className="sp-info-row">
+                  <div className="sp-info-icon">
+                    <Phone />
+                  </div>
+                  <div className="sp-info-content">
+                    <div className="sp-info-label">Số điện thoại</div>
+                    <div className="sp-info-value">{formData.phone}</div>
+                  </div>
+                </div>
+
+                <div className="sp-info-row">
+                  <div className="sp-info-icon">
+                    <LocationOn />
+                  </div>
+                  <div className="sp-info-content">
+                    <div className="sp-info-label">Địa chỉ</div>
+                    <div className="sp-info-value">{formData.address}</div>
+                  </div>
+                </div>
+
+                <div className="sp-info-row">
+                  <div className="sp-info-icon">
+                    <School />
+                  </div>
+                  <div className="sp-info-content">
+                    <div className="sp-info-label">Ngành học</div>
+                    <div className="sp-info-value">{formData.major}</div>
+                  </div>
+                </div>
+
+                <div className="sp-info-row">
+                  <div className="sp-info-icon">
+                    <Info />
+                  </div>
+                  <div className="sp-info-content">
+                    <div className="sp-info-label">Tình trạng học tập</div>
+                    <div className="sp-info-value">{getStatusChip(formData.status)}</div>
+                  </div>
+                </div>
+
+                <div className="sp-info-row sp-bio-row">
+                  <div className="sp-info-icon">
+                    <Person />
+                  </div>
+                  <div className="sp-info-content">
+                    <div className="sp-info-label">Giới thiệu bản thân</div>
+                    <div className="sp-info-value sp-bio-text">{formData.bio}</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="sp-edit-form">
+                <div className="sp-form-group">
+                  <label className="sp-form-label">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="sp-form-input"
+                  />
+                </div>
+
+                <div className="sp-form-group">
+                  <label className="sp-form-label">Số điện thoại</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="sp-form-input"
+                  />
+                </div>
+
+                <div className="sp-form-group">
+                  <label className="sp-form-label">Địa chỉ</label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    className="sp-form-input"
+                  />
+                </div>
+
+                <div className="sp-form-row">
+                  <div className="sp-form-group">
+                    <label className="sp-form-label">Ngành học</label>
+                    <select
+                      name="major"
+                      value={formData.major}
+                      onChange={handleInputChange}
+                      className="sp-form-select"
+                    >
+                      <option value="Công nghệ thông tin">Công nghệ thông tin</option>
+                      <option value="Kinh tế">Kinh tế</option>
+                      <option value="Ngoại ngữ">Ngoại ngữ</option>
+                      <option value="Kỹ thuật">Kỹ thuật</option>
+                    </select>
+                  </div>
+
+                  <div className="sp-form-group">
+                    <label className="sp-form-label">Tình trạng học tập</label>
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      className="sp-form-select"
+                    >
+                      <option value="Đang học">Đang học</option>
+                      <option value="Tạm nghỉ">Tạm nghỉ</option>
+                      <option value="Đã tốt nghiệp">Đã tốt nghiệp</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="sp-form-group">
+                  <label className="sp-form-label">Giới thiệu bản thân</label>
+                  <textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                    className="sp-form-textarea"
+                    rows="4"
+                  />
+                </div>
+
+                {/* Password Change Section */}
+                <div className="sp-password-section">
+                  <h3 className="sp-password-title">
+                    <Lock sx={{ marginRight: 1 }} />
+                    Đổi mật khẩu
+                  </h3>
+                  <div className="sp-form-group">
+                    <label className="sp-form-label">Mật khẩu hiện tại</label>
+                    <input
+                      type="password"
+                      name="currentPassword"
+                      value={formData.currentPassword}
+                      onChange={handleInputChange}
+                      className="sp-form-input"
+                    />
+                  </div>
+                  <div className="sp-form-row">
+                    <div className="sp-form-group">
+                      <label className="sp-form-label">Mật khẩu mới</label>
+                      <input
+                        type="password"
+                        name="newPassword"
+                        value={formData.newPassword}
+                        onChange={handleInputChange}
+                        className="sp-form-input"
+                      />
+                    </div>
+                    <div className="sp-form-group">
+                      <label className="sp-form-label">Xác nhận mật khẩu mới</label>
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        className="sp-form-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Achievements Section */}
-          <div className="content-section">
-            <h3>Achievements</h3>
-            <div className="achievements">
-              {student.achievements.map((achievement, index) => (
-                <div key={index} className="achievement-item">
-                  <span className="achievement-icon">🏆</span>
-                  <span>{achievement}</span>
-                </div>
-              ))}
+          {isEditing && (
+            <div className="sp-action-buttons">
+              <button className="sp-btn sp-btn-cancel" onClick={handleCancel}>
+                <Cancel /> Hủy bỏ
+              </button>
+              <button className="sp-btn sp-btn-save" onClick={handleSave}>
+                <Save /> Lưu thay đổi
+              </button>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
