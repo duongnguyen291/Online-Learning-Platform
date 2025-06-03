@@ -12,7 +12,7 @@ import {
   Cancel,
   Lock
 } from '@mui/icons-material';
-import './StudentProfile.css';
+import './studentProfile.css';
 
 const StudentProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
