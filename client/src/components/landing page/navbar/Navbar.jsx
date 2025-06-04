@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react'
 import "./navbar.css"
 import "./navbar2.css"
 import logo from "../../../assets/images/Edusmart.png"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 
 const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     // Check login status from localStorage
@@ -30,7 +31,11 @@ const Navbar = () => {
         localStorage.removeItem('userInfo');
         setIsLoggedIn(false);
         setUserEmail('');
-        navigate('/');
+        
+        // If we're not on the landing page, navigate to it
+        if (location.pathname !== '/') {
+          navigate('/');
+        }
       }
     } catch (error) {
       console.error('Logout failed:', error);

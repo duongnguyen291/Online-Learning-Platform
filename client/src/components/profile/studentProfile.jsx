@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Email,
   Phone,
@@ -10,26 +10,72 @@ import {
   Camera,
   Save,
   Cancel,
-  Lock
+  Lock,
+  Badge,
+  CalendarMonth
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import './studentProfile.css';
 
 const StudentProfile = () => {
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face');
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: 'Nguyễn Văn An',
-    email: 'nguyenvanan@gmail.com',
-    phone: '0123456789',
-    address: 'Quận Hai Bà Trưng, Hà Nội',
-    major: 'Công nghệ thông tin',
-    status: 'Đang học',
-    bio: 'Sinh viên năm 3 chuyên ngành Công nghệ thông tin, đam mê lập trình web và phát triển ứng dụng di động. Luôn tìm tòi học hỏi công nghệ mới và ứng dụng vào thực tế.',
+    userCode: '',
+    name: '',
+    role: '',
+    dob: '',
+    login: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/v1/profile', {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('userInfo');
+          navigate('/');
+          return;
+        }
+        throw new Error('Failed to fetch profile');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setFormData({
+          userCode: data.user.UserCode || '',
+          name: data.user.Name || '',
+          role: data.user.Role || '',
+          dob: data.user.DOB ? new Date(data.user.DOB).toISOString().split('T')[0] : '',
+          login: data.user.Login || '',
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+        setLoading(false);
+      } else {
+        setError(data.message);
+        setLoading(false);
+      }
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -48,15 +94,14 @@ const StudentProfile = () => {
     }
   };
 
-  const handleSave = () => {
-    console.log('Saving data:', formData);
+  const handleSave = async () => {
+    // TODO: Implement save functionality when backend endpoint is available
     setIsEditing(false);
-    setShowPasswordChange(false);
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    setShowPasswordChange(false);
+    fetchProfile(); // Reload original data
   };
 
   const getStatusChip = (status) => {
@@ -73,16 +118,24 @@ const StudentProfile = () => {
     );
   };
 
+  if (loading) {
+    return <div className="sp-loading">Loading profile...</div>;
+  }
+
+  if (error) {
+    return <div className="sp-error">{error}</div>;
+  }
+
   return (
     <div className="sp-container">
       <div className="sp-wrapper">
-        <h1 className="sp-page-title">Hồ Sơ Học Viên</h1>
+        <h1 className="sp-page-title">User Profile</h1>
         
         <div className="sp-profile-card">
           <div className="sp-avatar-section">
             {!isEditing && (
               <button className="sp-edit-btn" onClick={() => setIsEditing(true)}>
-                <Edit fontSize="small" /> Chỉnh sửa
+                <Edit fontSize="small" /> Edit Profile
               </button>
             )}
             
@@ -106,13 +159,13 @@ const StudentProfile = () => {
               {isEditing ? (
                 <input
                   type="text"
-                  name="fullName"
-                  value={formData.fullName}
+                  name="name"
+                  value={formData.name}
                   onChange={handleInputChange}
                   className="sp-name-input"
                 />
               ) : (
-                formData.fullName
+                formData.name
               )}
             </div>
           </div>
@@ -122,31 +175,21 @@ const StudentProfile = () => {
               <div className="sp-info-grid">
                 <div className="sp-info-row">
                   <div className="sp-info-icon">
+                    <Badge />
+                  </div>
+                  <div className="sp-info-content">
+                    <div className="sp-info-label">User ID</div>
+                    <div className="sp-info-value">{formData.userCode}</div>
+                  </div>
+                </div>
+
+                <div className="sp-info-row">
+                  <div className="sp-info-icon">
                     <Email />
                   </div>
                   <div className="sp-info-content">
-                    <div className="sp-info-label">Email</div>
-                    <div className="sp-info-value">{formData.email}</div>
-                  </div>
-                </div>
-
-                <div className="sp-info-row">
-                  <div className="sp-info-icon">
-                    <Phone />
-                  </div>
-                  <div className="sp-info-content">
-                    <div className="sp-info-label">Số điện thoại</div>
-                    <div className="sp-info-value">{formData.phone}</div>
-                  </div>
-                </div>
-
-                <div className="sp-info-row">
-                  <div className="sp-info-icon">
-                    <LocationOn />
-                  </div>
-                  <div className="sp-info-content">
-                    <div className="sp-info-label">Địa chỉ</div>
-                    <div className="sp-info-value">{formData.address}</div>
+                    <div className="sp-info-label">Login Email</div>
+                    <div className="sp-info-value">{formData.login}</div>
                   </div>
                 </div>
 
@@ -155,105 +198,66 @@ const StudentProfile = () => {
                     <School />
                   </div>
                   <div className="sp-info-content">
-                    <div className="sp-info-label">Ngành học</div>
-                    <div className="sp-info-value">{formData.major}</div>
+                    <div className="sp-info-label">Role</div>
+                    <div className="sp-info-value">{formData.role}</div>
                   </div>
                 </div>
 
                 <div className="sp-info-row">
                   <div className="sp-info-icon">
-                    <Info />
+                    <CalendarMonth />
                   </div>
                   <div className="sp-info-content">
-                    <div className="sp-info-label">Tình trạng học tập</div>
-                    <div className="sp-info-value">{getStatusChip(formData.status)}</div>
-                  </div>
-                </div>
-
-                <div className="sp-info-row sp-bio-row">
-                  <div className="sp-info-icon">
-                    <Person />
-                  </div>
-                  <div className="sp-info-content">
-                    <div className="sp-info-label">Giới thiệu bản thân</div>
-                    <div className="sp-info-value sp-bio-text">{formData.bio}</div>
+                    <div className="sp-info-label">Date of Birth</div>
+                    <div className="sp-info-value">
+                      {new Date(formData.dob).toLocaleDateString()}
+                    </div>
                   </div>
                 </div>
               </div>
             ) : (
               <div className="sp-edit-form">
                 <div className="sp-form-group">
-                  <label className="sp-form-label">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="sp-form-input"
-                  />
-                </div>
-
-                <div className="sp-form-group">
-                  <label className="sp-form-label">Số điện thoại</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="sp-form-input"
-                  />
-                </div>
-
-                <div className="sp-form-group">
-                  <label className="sp-form-label">Địa chỉ</label>
+                  <label className="sp-form-label">User ID</label>
                   <input
                     type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    className="sp-form-input"
+                    name="userCode"
+                    value={formData.userCode}
+                    disabled
+                    className="sp-form-input sp-input-disabled"
                   />
                 </div>
 
-                <div className="sp-form-row">
-                  <div className="sp-form-group">
-                    <label className="sp-form-label">Ngành học</label>
-                    <select
-                      name="major"
-                      value={formData.major}
-                      onChange={handleInputChange}
-                      className="sp-form-select"
-                    >
-                      <option value="Công nghệ thông tin">Công nghệ thông tin</option>
-                      <option value="Kinh tế">Kinh tế</option>
-                      <option value="Ngoại ngữ">Ngoại ngữ</option>
-                      <option value="Kỹ thuật">Kỹ thuật</option>
-                    </select>
-                  </div>
-
-                  <div className="sp-form-group">
-                    <label className="sp-form-label">Tình trạng học tập</label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-                      className="sp-form-select"
-                    >
-                      <option value="Đang học">Đang học</option>
-                      <option value="Tạm nghỉ">Tạm nghỉ</option>
-                      <option value="Đã tốt nghiệp">Đã tốt nghiệp</option>
-                    </select>
-                  </div>
+                <div className="sp-form-group">
+                  <label className="sp-form-label">Login Email</label>
+                  <input
+                    type="email"
+                    name="login"
+                    value={formData.login}
+                    disabled
+                    className="sp-form-input sp-input-disabled"
+                  />
                 </div>
 
                 <div className="sp-form-group">
-                  <label className="sp-form-label">Giới thiệu bản thân</label>
-                  <textarea
-                    name="bio"
-                    value={formData.bio}
+                  <label className="sp-form-label">Role</label>
+                  <input
+                    type="text"
+                    name="role"
+                    value={formData.role}
+                    disabled
+                    className="sp-form-input sp-input-disabled"
+                  />
+                </div>
+
+                <div className="sp-form-group">
+                  <label className="sp-form-label">Date of Birth</label>
+                  <input
+                    type="date"
+                    name="dob"
+                    value={formData.dob}
                     onChange={handleInputChange}
-                    className="sp-form-textarea"
-                    rows="4"
+                    className="sp-form-input"
                   />
                 </div>
 
@@ -261,10 +265,10 @@ const StudentProfile = () => {
                 <div className="sp-password-section">
                   <h3 className="sp-password-title">
                     <Lock sx={{ marginRight: 1 }} />
-                    Đổi mật khẩu
+                    Change Password
                   </h3>
                   <div className="sp-form-group">
-                    <label className="sp-form-label">Mật khẩu hiện tại</label>
+                    <label className="sp-form-label">Current Password</label>
                     <input
                       type="password"
                       name="currentPassword"
@@ -275,7 +279,7 @@ const StudentProfile = () => {
                   </div>
                   <div className="sp-form-row">
                     <div className="sp-form-group">
-                      <label className="sp-form-label">Mật khẩu mới</label>
+                      <label className="sp-form-label">New Password</label>
                       <input
                         type="password"
                         name="newPassword"
@@ -285,7 +289,7 @@ const StudentProfile = () => {
                       />
                     </div>
                     <div className="sp-form-group">
-                      <label className="sp-form-label">Xác nhận mật khẩu mới</label>
+                      <label className="sp-form-label">Confirm New Password</label>
                       <input
                         type="password"
                         name="confirmPassword"
@@ -303,10 +307,10 @@ const StudentProfile = () => {
           {isEditing && (
             <div className="sp-action-buttons">
               <button className="sp-btn sp-btn-cancel" onClick={handleCancel}>
-                <Cancel /> Hủy bỏ
+                <Cancel /> Cancel
               </button>
               <button className="sp-btn sp-btn-save" onClick={handleSave}>
-                <Save /> Lưu thay đổi
+                <Save /> Save Changes
               </button>
             </div>
           )}

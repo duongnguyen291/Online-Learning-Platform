@@ -9,6 +9,7 @@ import {
   Award,
   Users,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import './MyCourses.css';
 
 const MyCourses = () => {
@@ -16,36 +17,49 @@ const MyCourses = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
+  const navigate = useNavigate();
 
   useEffect(() => {
+    // Check if user is logged in
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    if (!userInfo || !userInfo.isLoggedIn) {
+      navigate('/');
+      return;
+    }
+
     fetchEnrolledCourses();
-  }, []);
+  }, [navigate]);
 
   const fetchEnrolledCourses = async () => {
     try {
-      // First, fetch the course codes
-      const response = await fetch('http://localhost:5000/api/v1/user/courses', {
+      const response = await fetch('http://localhost:5000/api/v1/my-courses', {
         method: 'GET',
         credentials: 'include',
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          // If unauthorized, clear user info and redirect to home
+          localStorage.removeItem('userInfo');
+          navigate('/');
+          return;
+        }
         throw new Error('Failed to fetch enrolled courses');
       }
 
       const data = await response.json();
       
-      if (data.success) {
-        // Transform the course codes into course objects with progress
-        const coursesWithProgress = data.courseCodes.map(courseCode => ({
-          id: courseCode,
-          title: `Course ${courseCode}`, // You can fetch actual course details if available
-          progress: Math.floor(Math.random() * 100), // Replace with actual progress
-          enrollmentDate: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
-          students: Math.floor(Math.random() * 2000) + 500,
-          duration: "12 hours"
+      if (data.success && data.courses) {
+        const formattedCourses = data.courses.map(course => ({
+          id: course.courseCode,
+          title: course.name,
+          lecturer: course.lecturer,
+          status: course.status,
+          progress: course.progress,
+          score: course.score,
+          enrollmentDate: course.enrollmentDate,
         }));
-        setMyCourses(coursesWithProgress);
+        setMyCourses(formattedCourses);
       } else {
         setError(data.message || 'Failed to fetch courses');
       }
@@ -57,15 +71,14 @@ const MyCourses = () => {
   };
 
   const filteredCourses = myCourses.filter(course => {
-    if (activeTab === 'completed') return course.progress === 100;
-    if (activeTab === 'inProgress') return course.progress > 0 && course.progress < 100;
+
     return true;
   });
 
   const stats = {
     total: myCourses.length,
-    inProgress: myCourses.filter(course => course.progress > 0 && course.progress < 100).length,
-    completed: myCourses.filter(course => course.progress === 100).length
+    inProgress: myCourses.length, // Since we don't have percentage progress, all courses are "in progress"
+    completed: 0 // We'll need a different way to determine completed courses
   };
 
   const getTitleClass = (title) => {
@@ -123,67 +136,18 @@ const MyCourses = () => {
 
           <div className="mycourses-stat-card">
             <div className="mycourses-stat-content">
-              <div className="mycourses-stat-icon mycourses-orange-icon">
-                <Clock size={24} />
-              </div>
-              <div className="mycourses-stat-info">
-                <p className="mycourses-stat-number">{stats.inProgress}</p>
-                <p className="mycourses-stat-label">In Progress</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mycourses-stat-card">
-            <div className="mycourses-stat-content">
-              <div className="mycourses-stat-icon mycourses-green-icon">
-                <CheckCircle size={24} />
-              </div>
-              <div className="mycourses-stat-info">
-                <p className="mycourses-stat-number">{stats.completed}</p>
-                <p className="mycourses-stat-label">Completed</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mycourses-stat-card">
-            <div className="mycourses-stat-content">
               <div className="mycourses-stat-icon mycourses-blue-icon">
-                <TrendingUp size={24} />
+                <Award size={24} />
               </div>
               <div className="mycourses-stat-info">
-                <p className="mycourses-stat-number">{Math.round(myCourses.reduce((acc, course) => acc + course.progress, 0) / myCourses.length) || 0}%</p>
-                <p className="mycourses-stat-label">Average Progress</p>
+                <p className="mycourses-stat-number">{myCourses.reduce((acc, course) => acc + course.score, 0) / myCourses.length || 0}</p>
+                <p className="mycourses-stat-label">Average Score</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Course Tabs */}
-        <div className="mycourses-tabs">
-          <button 
-            className={`mycourses-tab-btn ${activeTab === 'all' ? 'active' : ''}`}
-            onClick={() => setActiveTab('all')}
-          >
-            <BookOpen size={18} />
-            All Courses ({stats.total})
-          </button>
-          <button 
-            className={`mycourses-tab-btn ${activeTab === 'inProgress' ? 'active' : ''}`}
-            onClick={() => setActiveTab('inProgress')}
-          >
-            <Clock size={18} />
-            In Progress ({stats.inProgress})
-          </button>
-          <button 
-            className={`mycourses-tab-btn ${activeTab === 'completed' ? 'active' : ''}`}
-            onClick={() => setActiveTab('completed')}
-          >
-            <CheckCircle size={18} />
-            Completed ({stats.completed})
-          </button>
-        </div>
-
-        {/* Courses Grid */}
+        {/* Course Grid */}
         <div className="mycourses-grid">
           {filteredCourses.map(course => (
             <div key={course.id} className="mycourses-card">
@@ -195,52 +159,38 @@ const MyCourses = () => {
 
                   <div className="mycourses-meta">
                     <div className="mycourses-meta-item">
-                      <Users size={14} />
-                      <span>{course.students.toLocaleString()} students</span>
+                      <BookOpen size={14} />
+                      <span>Course Code: {course.progress}</span>
                     </div>
                     <div className="mycourses-meta-item">
-                      <Clock size={14} />
-                      <span>{course.duration}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mycourses-progress-section">
-                    <div className="mycourses-progress-header">
-                      <span>Progress</span>
-                      <span className="mycourses-progress-percent">{course.progress}%</span>
-                    </div>
-                    <div className="mycourses-progress-bar">
-                      <div 
-                        className="mycourses-progress-fill"
-                        style={{ width: `${course.progress}%` }}
-                      />
+                      <Award size={14} />
+                      <span>Score: {course.score}</span>
                     </div>
                   </div>
 
-                  <div className="mycourses-enrollment-date">
-                    <Calendar size={14} />
-                    <span>Enrolled: {new Date(course.enrollmentDate).toLocaleDateString()}</span>
+                  <div className="mycourses-meta">
+                    <div className="mycourses-meta-item">
+                      <Calendar size={14} />
+                      <span>Enrolled: {new Date(course.enrollmentDate).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="mycourses-meta">
+                    <div className="mycourses-meta-item">
+                      <Users size={14} />
+                      <span>Lecturer: {course.lecturer}</span>
+                    </div>
+                    <div className="mycourses-meta-item">
+                      <Clock size={14} />
+                      <span>Status: {course.status}</span>
+                    </div>
                   </div>
                 </div>
 
                 <div className="mycourses-actions-section">
                   <button className="mycourses-continue-btn">
-                    {course.progress === 100 ? (
-                      <>
-                        <Award size={18} />
-                        View Certificate
-                      </>
-                    ) : course.progress > 0 ? (
-                      <>
-                        <Play size={18} />
-                        Continue Learning
-                      </>
-                    ) : (
-                      <>
-                        <Play size={18} />
-                        Start Course
-                      </>
-                    )}
+                    <Play size={18} />
+                    Continue Learning
                   </button>
                 </div>
               </div>

@@ -395,3 +395,36 @@
     align-self: center;
   }
 }
+
+/* Add these new styles to the existing CSS file */
+
+.sp-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.sp-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  font-size: 1.2rem;
+  color: #d32f2f;
+  text-align: center;
+  padding: 2rem;
+}
+
+.sp-input-disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.sp-input-disabled:focus {
+  border-color: #e0e0e0;
+  box-shadow: none;
+}

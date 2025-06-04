@@ -1,16 +1,16 @@
 import React from 'react';
 import Footer from '../components/landing page/footer/Footer';
-import Navbar2 from '../components/landing page/navbar/Navbar2';
+import Navbar from '../components/landing page/navbar/Navbar';
 import InnerCourse from '../components/course/courseInner';
 
-function InnerCoursePage() {
+const InnerCoursePage = () => {
   return (
-    <>
-      <Navbar2 />
+    <div>
+      <Navbar />
       <InnerCourse/>
       <Footer />
-    </>
+    </div>
   );
-}
+};
 
 export default InnerCoursePage;

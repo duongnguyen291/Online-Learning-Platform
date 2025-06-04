@@ -1,16 +1,16 @@
 import React from 'react';
-import Footer from '../components/landing page/footer/Footer';
-import Navbar2 from '../components/landing page/navbar/Navbar2';
+import Navbar from '../components/landing page/navbar/Navbar';
 import StudentProfile from '../components/profile/studentProfile';
+import Footer from '../components/landing page/footer/Footer';
 
-function StudentProfilePage() {
+const StudentProfilePage = () => {
   return (
-    <>
-      <Navbar2 />
+    <div>
+      <Navbar />
       <StudentProfile />
       <Footer />
-    </>
+    </div>
   );
-}
+};
 
 export default StudentProfilePage; 

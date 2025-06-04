@@ -16,6 +16,7 @@ limitations under the License.
 */
 
 const User = require("../models/userModel");
+const Course = require("../models/courseModel");
 const Enrollment = require("../models/enrollmentModel");
 const {initUsersFile, writeUsersFile, readUsersFile, deleteUsersFile} = require("../controllers/userCredetialController")
 const fs = require("fs");
@@ -115,24 +116,47 @@ const logoutUser = async (req, res) => {
 
 const getCourses = async (req, res) => {
   try {
+    // Check if user is logged in
     if (!await readUsersFile()) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
-    const { login, password } = await JSON.parse(fs.readFileSync('controllers/users.json'));
-    console.log(login);
 
+    // Get current user's login info
+    const { login, password } = await JSON.parse(fs.readFileSync('controllers/users.json'));
+
+    // Find the user to get their UserCode
     const user = await User.findOne({Login: login});
-    console.log(user.UserCode);
     const userCode = user.UserCode;
 
-    const enrollments = await Enrollment.find({ UserCode: userCode });
-    console.log(enrollments);
-    const courseCodes = enrollments.map(e => e.CourseCode);
+    // Find all enrollments for this user
+    const enrollments = await Enrollment.find({ UserCode: userCode });  
+    //console.log(enrollments);
+    // Extract all course codes from enrollments
+    const courseCodes = enrollments.map(enrollment => enrollment.CourseCode);
+    console.log(courseCodes);
+
+    // Find all courses that match these course codes
+    const courses = await Course.find({ CourseCode: { $in: courseCodes } });
+
+    // Combine course data with enrollment data
+    const coursesWithProgress = courses.map(course => {
+      const enrollment = enrollments.find(e => e.CourseCode === course.CourseCode);
+      return {
+        courseCode: course.CourseCode,
+        name: course.Name,
+        lecturer: course.Lecturer,
+        status: course.Status,
+        progress: enrollment.Progress,
+        score: enrollment.Score,
+        enrollmentDate: enrollment.StartDate
+      };
+    });
+    console.log(coursesWithProgress);
 
     return res.status(200).json({
       success: true,
-      courseCodes,
-      message: "Fetched enrolled courses",
+      courses: coursesWithProgress,
+      message: "Fetched enrolled courses successfully",
     });
   } catch (error) {
     console.error("Error fetching courses:", error);
@@ -143,5 +167,29 @@ const getCourses = async (req, res) => {
   }
 };
 
+const getProfile = async (req, res) => {
+  try {
+    // Check if user is logged in
+    if (!await readUsersFile()) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
 
-module.exports = { register, loginUser, logoutUser, getCourses};
+    // Get current user's login info
+    const { login, password } = await JSON.parse(fs.readFileSync('controllers/users.json'));
+    const user = await User.findOne({Login: login});
+    return res.status(200).json({
+      success: true,
+      user,
+      message: "Profile fetched successfully",
+    });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
+module.exports = { register, loginUser, logoutUser, getCourses, getProfile};
