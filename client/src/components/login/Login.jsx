@@ -38,8 +38,9 @@ function LoginForm() {
           isLoggedIn: true,
           email: data.login
         }));
-        // Redirect to home page
+        // Redirect to home page and reload to show the new navbar
         navigate('/');
+        window.location.reload();
       } else {
         alert(result.message || 'Login failed');
       }

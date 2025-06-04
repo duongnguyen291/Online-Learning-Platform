@@ -560,3 +560,123 @@
       font-size: 1rem;
     }
   }
+
+.my-courses-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.my-courses-container h1 {
+  color: #333;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.loading, .error-message {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #666;
+}
+
+.error-message {
+  color: #BF2C2C;
+  background-color: rgba(191, 44, 44, 0.1);
+  border-radius: 8px;
+}
+
+.no-courses {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.no-courses h2 {
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.no-courses p {
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.browse-courses-btn {
+  display: inline-block;
+  background-color: #BF2C2C;
+  color: white;
+  padding: 12px 25px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.browse-courses-btn:hover {
+  background-color: #a82d2d;
+}
+
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
+  margin-top: 30px;
+}
+
+.course-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.course-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.course-info {
+  padding: 20px;
+}
+
+.course-info h3 {
+  color: #333;
+  margin: 0 0 15px 0;
+  font-size: 18px;
+}
+
+.view-course-btn {
+  display: inline-block;
+  background-color: #BF2C2C;
+  color: white;
+  padding: 8px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.view-course-btn:hover {
+  background-color: #a82d2d;
+}
+
+/* Loading and Error States */
+.mycourses-loading,
+.mycourses-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  font-size: 1.25rem;
+  color: #6b7280;
+  text-align: center;
+  padding: 2rem;
+}
+
+.mycourses-error {
+  color: #dc2626;
+  background-color: #fee2e2;
+  border-radius: 0.5rem;
+  margin: 2rem;
+}

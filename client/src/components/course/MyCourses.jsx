@@ -11,82 +11,50 @@ import {
 } from 'lucide-react';
 import './MyCourses.css';
 
-// Sample course data - moved outside component
-const sampleCourses = [
-  {
-    id: 1,
-    title: "React Development Masterclass",
-    image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400",
-    instructor: "John Smith",
-    rating: 4.8,
-    students: 1250,
-    duration: "12 hours",
-    level: "Intermediate"
-  },
-  {
-    id: 2,
-    title: "UI/UX Design Fundamentals",
-    image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400",
-    instructor: "Sarah Johnson",
-    rating: 4.9,
-    students: 890,
-    duration: "8 hours",
-    level: "Beginner"
-  },
-  {
-    id: 3,
-    title: "JavaScript Advanced Concepts",
-    image: "https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=400",
-    instructor: "Mike Chen",
-    rating: 4.7,
-    students: 2100,
-    duration: "15 hours",
-    level: "Advanced"
-  },
-  {
-    id: 4,
-    title: "Python for Data Science",
-    image: "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=400",
-    instructor: "Dr. Lisa Wang",
-    rating: 4.8,
-    students: 1680,
-    duration: "20 hours",
-    level: "Intermediate"
-  },
-  {
-    id: 5,
-    title: "Digital Marketing Strategy",
-    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400",
-    instructor: "Alex Rivera",
-    rating: 4.6,
-    students: 950,
-    duration: "10 hours",
-    level: "Beginner"
-  },
-  {
-    id: 6,
-    title: "Mobile App Development",
-    image: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400",
-    instructor: "Emma Taylor",
-    rating: 4.9,
-    students: 1350,
-    duration: "18 hours",
-    level: "Advanced"
-  }
-];
-
 const MyCourses = () => {
   const [myCourses, setMyCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
 
   useEffect(() => {
-    const userCourses = sampleCourses.map(course => ({
-      ...course,
-      progress: Math.floor(Math.random() * 100),
-      enrollmentDate: new Date(Date.now() - Math.random() * 10000000000).toISOString()
-    }));
-    setMyCourses(userCourses);
-  }, []); // Empty dependency array is now correct
+    fetchEnrolledCourses();
+  }, []);
+
+  const fetchEnrolledCourses = async () => {
+    try {
+      // First, fetch the course codes
+      const response = await fetch('http://localhost:5000/api/v1/user/courses', {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch enrolled courses');
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Transform the course codes into course objects with progress
+        const coursesWithProgress = data.courseCodes.map(courseCode => ({
+          id: courseCode,
+          title: `Course ${courseCode}`, // You can fetch actual course details if available
+          progress: Math.floor(Math.random() * 100), // Replace with actual progress
+          enrollmentDate: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
+          students: Math.floor(Math.random() * 2000) + 500,
+          duration: "12 hours"
+        }));
+        setMyCourses(coursesWithProgress);
+      } else {
+        setError(data.message || 'Failed to fetch courses');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredCourses = myCourses.filter(course => {
     if (activeTab === 'completed') return course.progress === 100;
@@ -103,6 +71,26 @@ const MyCourses = () => {
   const getTitleClass = (title) => {
     return title.length > 40 ? 'mycourses-title long-title' : 'mycourses-title';
   };
+
+  if (loading) {
+    return (
+      <div className="mycourses-page">
+        <div className="mycourses-loading">
+          Loading your courses...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mycourses-page">
+        <div className="mycourses-error">
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mycourses-page">
