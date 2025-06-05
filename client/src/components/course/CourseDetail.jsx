@@ -1,16 +1,74 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import '../../assets/css/courseDetail.css';
 import { coursesData, getAllCourses } from '../../assets/data/courseData';
 import { getCourseDetail } from '../../assets/data/courseDetailData';
 
 const CourseDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const allCourses = getAllCourses();
   const course = allCourses.find(course => course.id === parseInt(id));
+  const [enrollmentStatus, setEnrollmentStatus] = useState(null); // 'pending', 'enrolled', or null
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   
   // Get extended course details
   const courseDetail = getCourseDetail(id);
+
+  useEffect(() => {
+    // Check login status
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    setIsLoggedIn(!!userInfo?.isLoggedIn);
+    
+    // If logged in, fetch enrollment status
+    if (userInfo?.isLoggedIn) {
+      fetchEnrollmentStatus();
+    }
+  }, [id]);
+
+  const fetchEnrollmentStatus = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/v1/enrollment-status/${id}`, {
+        credentials: 'include'
+      });
+      const data = await response.json();
+      if (data.success) {
+        setEnrollmentStatus(data.status);
+      }
+    } catch (error) {
+      console.error('Error fetching enrollment status:', error);
+    }
+  };
+
+  const handleEnrollClick = async () => {
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await fetch(`http://localhost:5000/api/v1/enroll/${id}`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const data = await response.json();
+      if (data.success) {
+        setEnrollmentStatus('pending');
+        setShowSuccessMessage(true);
+        // Hide success message after 5 seconds
+        setTimeout(() => {
+          setShowSuccessMessage(false);
+        }, 5000);
+      }
+    } catch (error) {
+      console.error('Error enrolling in course:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!course) {
     return (
@@ -21,8 +79,6 @@ const CourseDetail = () => {
       </div>
     );
   }
-
-  const discountPercentage = Math.round(((course.originalPrice - course.discountedPrice) / course.originalPrice) * 100);
 
   // Get the category directly from the course data itself
   const courseCategory = course.category;
@@ -44,6 +100,32 @@ const CourseDetail = () => {
   };
   
   const similarCourses = getCategoryCourses();
+
+  const getEnrollButtonText = () => {
+    if (isLoading) return 'Processing...';
+    if (!isLoggedIn) return 'Login to Enroll';
+    switch (enrollmentStatus) {
+      case 'pending':
+        return 'Enrollment Pending';
+      case 'enrolled':
+        return 'Go to Course';
+      default:
+        return 'Enroll Now';
+    }
+  };
+
+  const getEnrollButtonClass = () => {
+    if (isLoading) return 'enroll-button loading';
+    if (!isLoggedIn) return 'enroll-button login-required';
+    switch (enrollmentStatus) {
+      case 'pending':
+        return 'enroll-button pending';
+      case 'enrolled':
+        return 'enroll-button enrolled';
+      default:
+        return 'enroll-button';
+    }
+  };
 
   return (
     <div className="course-detail-container">
@@ -71,24 +153,26 @@ const CourseDetail = () => {
 
         {/* Right Side - Course Info */}
         <div className="course-info-section">
-          <div className="course-rating-container">
-            {[...Array(5)].map((_, index) => (
-              <span key={index} className="star">★</span>
-            ))}
-            <span className="rating-value">({course.rating})</span>
-            <span className="review-count">{formatNumber(course.reviews)} ratings</span>
-          </div>
-
-          <div className="course-price-container">
-            <span className="discounted-price">${course.discountedPrice.toFixed(2)}</span>
-            <span className="original-price">${course.originalPrice.toFixed(2)}</span>
-            <div className="discount-badge">{discountPercentage}% OFF</div>
-          </div>
-
-          <button className="buy-button">Buy</button>
-          <button className="wishlist-button">
-            <span className="heart-icon">♡</span> Wishlist
+          <button 
+            className={getEnrollButtonClass()}
+            onClick={handleEnrollClick}
+            disabled={isLoading || enrollmentStatus === 'pending'}
+          >
+            {getEnrollButtonText()}
           </button>
+
+          {showSuccessMessage && (
+            <div className="enrollment-success-message">
+              Your enrollment request has been sent successfully!
+            </div>
+          )}
+
+          {enrollmentStatus === 'pending' && (
+            <div className="enrollment-status-message">
+              Your enrollment request is being reviewed by the lecturer.
+              We'll notify you once it's approved.
+            </div>
+          )}
 
           <div className="course-specs">
             <div className="spec-item">
@@ -166,10 +250,6 @@ const CourseDetail = () => {
                   <p className="similar-course-desc">
                     Comprehensive course on {similarCourse.title.toLowerCase()} with expert instruction and practical exercises.
                   </p>
-                  <div className="similar-course-price">
-                    <span className="similar-discounted-price">${similarCourse.discountedPrice}</span>
-                    <span className="similar-original-price">${similarCourse.originalPrice}</span>
-                  </div>
                 </div>
               </Link>
             </div>

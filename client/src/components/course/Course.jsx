@@ -4,14 +4,9 @@ import '../../assets/css/course.css';
 import SearchBar from './Searchbar';
 import { coursesData, getAllCourses, courseCategories } from '../../assets/data/courseData';
 
-const Course = ({ title, rating, reviews, originalPrice, discountedPrice, image }) => {
+const Course = ({ title, rating, reviews, image }) => {
   return (
     <div className="course-card">
-      <div className="course-badge-container">
-        <span className="course-badge best-seller">Best Seller</span>
-        <span className="course-badge discount">20% OFF</span>
-      </div>
-      
       <div className="course-image-container">
         <img 
           src={image || "/path/to/graduation-cap.png"} 
@@ -23,7 +18,7 @@ const Course = ({ title, rating, reviews, originalPrice, discountedPrice, image 
       <div className="course-details-general">
         <h3 className="course-title-general">{title}</h3>
         
-        <div className="course-rating">
+        {/* <div className="course-rating">
           <div className="stars">
             {[...Array(5)].map((_, index) => (
               <span key={index} className="star">★</span>
@@ -31,12 +26,11 @@ const Course = ({ title, rating, reviews, originalPrice, discountedPrice, image 
           </div>
           <span className="rating-value">({rating})</span>
           <span className="review-count">{reviews} </span>
-        </div>
+        </div> */}
         
-        <div className="course-pricing">
-          <span className="discounted-price">${discountedPrice}</span>
-          <span className="original-price">${originalPrice}</span>
-        </div>
+        <button className="see-detail-button">
+          See Detail
+        </button>
       </div>
     </div>
   );
@@ -200,8 +194,6 @@ const ProfessionalDegreePage = () => {
                   title={course.title}
                   rating={course.rating}
                   reviews={course.reviews}
-                  originalPrice={course.originalPrice}
-                  discountedPrice={course.discountedPrice}
                   image={course.image}
                 />
               </Link>

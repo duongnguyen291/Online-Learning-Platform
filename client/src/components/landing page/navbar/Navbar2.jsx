@@ -38,12 +38,6 @@ const Navbar2 = () => {
         <Link to="/chatbot" className="nav-link">
           <h3>Chatbot</h3>
         </Link>
-        <Link to="/how-to-use" className="nav-link">
-          <h3>How to use</h3>
-        </Link>
-        <Link to="/about" className="nav-link">
-          <h3>About us</h3>
-        </Link>
       </div>
 
       {/* Avatar học viên bên phải */}
