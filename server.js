@@ -32,7 +32,7 @@ connectDb(); // Connect database
 
 // Configure CORS
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],
+  origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:5174"],
   credentials: true
 }));
 
@@ -44,7 +44,7 @@ app.use(cookieParser());
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:5174","https://virtual-classroom-admin.vercel.app","https://virtual-classroom-application.vercel.app"],
+    origin: ["http://localhost:3000", "http://localhost:3001","https://virtual-classroom-admin.vercel.app","https://virtual-classroom-application.vercel.app"],
     methods: ["GET", "POST"],
     credentials: true
   },

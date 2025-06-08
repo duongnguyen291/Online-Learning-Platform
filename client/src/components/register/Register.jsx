@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 
 function Register() {
   const [isActive, setIsActive] = useState(true);
+  const [registrationStatus, setRegistrationStatus] = useState('');
 
   const handleToggleLogin = () => {
     setIsActive(false);
@@ -31,16 +32,31 @@ function Register() {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        window.location.href = '/login';
+        setRegistrationStatus('pending');
       } else {
+        setRegistrationStatus('error');
         alert(data.message || 'Registration failed');
       }
     })
     .catch(error => {
       console.error('Error:', error);
-      alert('User already exists');
+      setRegistrationStatus('error');
+      alert('An error occurred during registration');
     });
   };
+
+  if (registrationStatus === 'pending') {
+    return (
+      <div className="registration-status-container">
+        <h2>Registration Submitted!</h2>
+        <p>Your registration request has been submitted successfully and is pending admin approval.</p>
+        <p>You will be able to log in once an administrator approves your registration.</p>
+        <Link to="/login" className="back-to-login">
+          <button>Back to Login</button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <>

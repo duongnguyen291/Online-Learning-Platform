@@ -165,3 +165,18 @@
     z-index: 999;
   }
 }
+
+.notification-menu {
+  margin-top: 16px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 16px;
+}
+
+.notification-menu .ant-menu-item {
+  display: flex;
+  align-items: center;
+}
+
+.notification-menu .ant-badge {
+  margin-right: 10px;
+}

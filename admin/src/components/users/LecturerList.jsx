@@ -5,12 +5,12 @@ import './UserList.css';
 
 const { TabPane } = Tabs;
 
-const StudentList = () => {
-  const [students, setStudents] = useState({
+const LecturerList = () => {
+  const [lecturers, setLecturers] = useState({
     pending: [],
     active: []
   });
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedLecturer, setSelectedLecturer] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState({
     pending: true,
@@ -18,10 +18,10 @@ const StudentList = () => {
   });
 
   useEffect(() => {
-    fetchStudents();
+    fetchLecturers();
   }, []);
 
-  const fetchStudents = async () => {
+  const fetchLecturers = async () => {
     try {
       // Fetch pending registrations
       const pendingResponse = await fetch('http://localhost:5000/api/v2/pending-registrations', {
@@ -30,50 +30,52 @@ const StudentList = () => {
       const pendingData = await pendingResponse.json();
 
       if (pendingData.success) {
-        const pendingStudents = pendingData.pendingRegistrations
-          .filter(reg => reg.Role.toLowerCase() === 'student')
+        const pendingLecturers = pendingData.pendingRegistrations
+          .filter(reg => reg.Role.toLowerCase() === 'lecturer')
           .map(reg => ({
             id: reg._id,
-            userCode: reg.UserCode,
+            usercode: reg.UserCode,
             name: reg.Name,
             role: reg.Role,
             login: reg.Login,
             dob: reg.DOB,
+            workplace: reg.Workplace || 'Chưa cập nhật',
             status: 'pending'
           }));
 
-        setStudents(prev => ({
+        setLecturers(prev => ({
           ...prev,
-          pending: pendingStudents
+          pending: pendingLecturers
         }));
       }
 
-      // Fetch active students
+      // Fetch active lecturers
       const activeResponse = await fetch('http://localhost:5000/api/v2/find-active-users', {
         credentials: 'include'
       });
       const activeData = await activeResponse.json();
-
       if (activeData.success) {
-        const activeStudents = activeData.activeUsers
-        .filter(reg => reg.Role.toLowerCase() === 'student')
+        const activeLecturers = activeData.activeUsers
+        .filter(reg => reg.Role.toLowerCase() === 'lecturer')
         .map(user => ({
           id: user._id,
-          userCode: user.UserCode,
+          usercode: user.UserCode,
           name: user.Name,
           role: user.Role,
           login: user.Login,
           dob: user.DOB,
+          workplace: user.Workplace || 'Chưa cập nhật',
           status: 'active'
         }));
 
-        setStudents(prev => ({
+        setLecturers(prev => ({
           ...prev,
-          active: activeStudents
+          active: activeLecturers
         }));
       }
     } catch (error) {
-      message.error('Không thể tải danh sách học viên');
+      console.error('Error fetching lecturers:', error);
+      message.error('Không thể tải danh sách giảng viên');
     } finally {
       setLoading({
         pending: false,
@@ -82,16 +84,16 @@ const StudentList = () => {
     }
   };
 
-  const handleApprove = async (student) => {
+  const handleApprove = async (lecturer) => {
     try {
-      const response = await fetch('http://localhost:5000/api/v2/handle-registration', {
+      const response = await fetch('http://localhost:5000/api/v1/admin/handle-registration', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
         body: JSON.stringify({
-          registrationId: student.id,
+          registrationId: lecturer.id,
           action: 'approve'
         })
       });
@@ -99,26 +101,26 @@ const StudentList = () => {
       const data = await response.json();
       
       if (data.success) {
-        message.success(`Đã duyệt học viên ${student.name}`);
-        fetchStudents();
+        message.success(`Đã duyệt giảng viên ${lecturer.name}`);
+        fetchLecturers();
       } else {
-        message.error('Không thể duyệt học viên');
+        message.error('Không thể duyệt giảng viên');
       }
     } catch (error) {
-      message.error('Đã xảy ra lỗi khi duyệt học viên');
+      message.error('Đã xảy ra lỗi khi duyệt giảng viên');
     }
   };
 
-  const handleReject = async (student) => {
+  const handleReject = async (lecturer) => {
     try {
-      const response = await fetch('http://localhost:5000/api/v2/handle-registration', {
+      const response = await fetch('http://localhost:5000/api/v1/admin/handle-registration', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
         body: JSON.stringify({
-          registrationId: student.id,
+          registrationId: lecturer.id,
           action: 'reject'
         })
       });
@@ -126,19 +128,19 @@ const StudentList = () => {
       const data = await response.json();
       
       if (data.success) {
-        message.success(`Đã từ chối học viên ${student.name}`);
-        fetchStudents();
+        message.success(`Đã từ chối giảng viên ${lecturer.name}`);
+        fetchLecturers();
       } else {
-        message.error('Không thể từ chối học viên');
+        message.error('Không thể từ chối giảng viên');
       }
     } catch (error) {
-      message.error('Đã xảy ra lỗi khi từ chối học viên');
+      message.error('Đã xảy ra lỗi khi từ chối giảng viên');
     }
   };
 
-  const handleDelete = async (student) => {
+  const handleDelete = async (lecturer) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/v1/users/${student.id}`, {
+      const response = await fetch(`http://localhost:5000/api/v1/users/${lecturer.id}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -146,20 +148,21 @@ const StudentList = () => {
       const data = await response.json();
       
       if (data.success) {
-        message.success(`Đã xóa học viên ${student.name}`);
-        fetchStudents();
+        message.success(`Đã xóa giảng viên ${lecturer.name}`);
+        fetchLecturers();
       } else {
-        message.error('Không thể xóa học viên');
+        message.error('Không thể xóa giảng viên');
       }
     } catch (error) {
-      message.error('Đã xảy ra lỗi khi xóa học viên');
+      message.error('Đã xảy ra lỗi khi xóa giảng viên');
     }
   };
 
   const pendingColumns = [
-    { title: 'Mã học viên', dataIndex: 'userCode', key: 'userCode' },
+    { title: 'Mã giảng viên', dataIndex: 'usercode', key: 'usercode' },
     { title: 'Họ tên', dataIndex: 'name', key: 'name' },
     { title: 'Email', dataIndex: 'login', key: 'login' },
+    { title: 'Đơn vị', dataIndex: 'workplace', key: 'workplace' },
     {
       title: 'Trạng thái',
       key: 'status',
@@ -190,7 +193,7 @@ const StudentList = () => {
           </Button>
           <Button
             type="link"
-            onClick={() => showStudentDetails(record)}
+            onClick={() => showLecturerDetails(record)}
           >
             Chi tiết
           </Button>
@@ -200,9 +203,10 @@ const StudentList = () => {
   ];
 
   const activeColumns = [
-    { title: 'Mã học viên', dataIndex: 'userCode', key: 'userCode' },
+    { title: 'Mã giảng viên', dataIndex: 'usercode', key: 'usercode' },
     { title: 'Họ tên', dataIndex: 'name', key: 'name' },
     { title: 'Email', dataIndex: 'login', key: 'login' },
+    { title: 'Đơn vị', dataIndex: 'workplace', key: 'workplace' },
     {
       title: 'Trạng thái',
       key: 'status',
@@ -216,8 +220,8 @@ const StudentList = () => {
       render: (_, record) => (
         <div className="action-buttons">
           <Popconfirm
-            title="Xóa học viên"
-            description="Bạn có chắc chắn muốn xóa học viên này?"
+            title="Xóa giảng viên"
+            description="Bạn có chắc chắn muốn xóa giảng viên này?"
             onConfirm={() => handleDelete(record)}
             okText="Xóa"
             cancelText="Hủy"
@@ -233,7 +237,7 @@ const StudentList = () => {
           </Popconfirm>
           <Button
             type="link"
-            onClick={() => showStudentDetails(record)}
+            onClick={() => showLecturerDetails(record)}
           >
             Chi tiết
           </Button>
@@ -242,19 +246,19 @@ const StudentList = () => {
     },
   ];
 
-  const showStudentDetails = (student) => {
-    setSelectedStudent(student);
+  const showLecturerDetails = (lecturer) => {
+    setSelectedLecturer(lecturer);
     setIsModalVisible(true);
   };
 
   return (
     <div className="user-list-container">
-      <h2>Quản lý học viên</h2>
+      <h2>Quản lý giảng viên</h2>
       
       <Tabs defaultActiveKey="pending" className="user-list-tabs">
         <TabPane tab="Chờ duyệt" key="pending">
           <Table
-            dataSource={students.pending}
+            dataSource={lecturers.pending}
             columns={pendingColumns}
             rowKey="id"
             loading={loading.pending}
@@ -262,7 +266,7 @@ const StudentList = () => {
         </TabPane>
         <TabPane tab="Đang hoạt động" key="active">
           <Table
-            dataSource={students.active}
+            dataSource={lecturers.active}
             columns={activeColumns}
             rowKey="id"
             loading={loading.active}
@@ -271,7 +275,7 @@ const StudentList = () => {
       </Tabs>
 
       <Modal
-        title="Thông tin học viên"
+        title="Thông tin giảng viên"
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={[
@@ -280,16 +284,17 @@ const StudentList = () => {
           </Button>
         ]}
       >
-        {selectedStudent && (
+        {selectedLecturer && (
           <div className="user-details">
-            <p><strong>Mã học viên:</strong> {selectedStudent.userCode}</p>
-            <p><strong>Họ tên:</strong> {selectedStudent.name}</p>
-            <p><strong>Vai trò:</strong> Học viên</p>
-            <p><strong>Email:</strong> {selectedStudent.login}</p>
-            <p><strong>Ngày sinh:</strong> {new Date(selectedStudent.dob).toLocaleDateString()}</p>
+            <p><strong>Mã giảng viên:</strong> {selectedLecturer.usercode}</p>
+            <p><strong>Họ tên:</strong> {selectedLecturer.name}</p>
+            <p><strong>Vai trò:</strong> Giảng viên</p>
+            <p><strong>Email:</strong> {selectedLecturer.login}</p>
+            <p><strong>Ngày sinh:</strong> {new Date(selectedLecturer.dob).toLocaleDateString()}</p>
+            <p><strong>Đơn vị:</strong> {selectedLecturer.workplace}</p>
             <p><strong>Trạng thái:</strong> 
-              <span className={`status-badge ${selectedStudent.status}`}>
-                {selectedStudent.status === 'pending' ? 'Chờ duyệt' : 'Đang hoạt động'}
+              <span className={`status-badge ${selectedLecturer.status}`}>
+                {selectedLecturer.status === 'pending' ? 'Chờ duyệt' : 'Đang hoạt động'}
               </span>
             </p>
           </div>
@@ -299,4 +304,4 @@ const StudentList = () => {
   );
 };
 
-export default StudentList; 
+export default LecturerList; 

@@ -2,7 +2,7 @@ import React from 'react';
 import { Layout, Menu } from 'antd';
 import { GraduationCap } from 'lucide-react';
 
-import { UserOutlined, TeamOutlined, ProfileOutlined, LogoutOutlined } from '@ant-design/icons';
+import { UserOutlined, TeamOutlined, ProfileOutlined, LogoutOutlined, BookFilled } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 
@@ -14,6 +14,11 @@ const Sidebar = () => {
 
   // Main menu items (excluding logout)
   const mainMenuItems = [
+    {
+      key: '/courses',
+      icon: <BookFilled />,
+      label: 'Quản lý khóa học',
+    },
     {
       key: '/students',
       icon: <TeamOutlined />,
@@ -53,12 +58,24 @@ const Sidebar = () => {
     navigate(item.key);
   };
 
-  const handleLogoutClick = (item) => {
+  const handleLogoutClick = async (item) => {
     if (item.key === '/logout') {
+      
       // Handle logout logic here
-      console.log('Logging out...');
-      // Add your logout logic here
-      return;
+      const response = await fetch('http://localhost:5000/api/v2/admin-logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const result = await response.json();
+      if (result.success) {
+        window.location.href = 'http://localhost:3000';
+        console.log('Logging out...');
+        // Add your logout logic here
+        return;
+      }
+      else{
+        alert(result.message || 'Logout failed');
+      }
     }
   };
 

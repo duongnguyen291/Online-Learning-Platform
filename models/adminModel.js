@@ -19,31 +19,29 @@ limitations under the License.
 const mongoose = require("mongoose");
 
 const adminSchema = new mongoose.Schema({
-  directorName: {
+  UserCode: {
     type: String,
     required: true,
   },
-  collegeName: {
+  Name: {
     type: String,
     required: true,
   },
-  email: {
+  Login: {
     type: String,
     required: true,
   },
-  centerCode:{
-    type:Number,
-    required:true
+  DOB: {
+    type: Date,
+    required: true,
   },
-  
-  password: {
+  Password: {
     type: String,
     required: true,
   },
-  role:{
+  Role:{
     type:String,
-    enum:['Registrar','Director','Teacher'],
-    default:'Director'
+    default:'Admin'
   }
 }, {versionKey: false});
 

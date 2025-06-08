@@ -16,13 +16,36 @@ limitations under the License.
 */
 
 const express = require('express');
-const {collegeRegister,collegeLogin} = require('../controllers/adminController');
+const {
+    collegeRegister, 
+    collegeLogin, 
+    getPendingRegistrations, 
+    handleRegistrationApproval, 
+    findActiveUsers, 
+    adminLogout,
+    addCourse,
+    editCourse,
+    deleteCourse,
+    getCourses,
+    getProfile,
+    updateProfile
+} = require('../controllers/adminController');
 
-const adminRouter = express.Router();
+const adminRoutes = express.Router();
+
+adminRoutes.post('/admin-login', collegeLogin);
+adminRoutes.post('/admin-register', collegeRegister);
+adminRoutes.get('/pending-registrations', getPendingRegistrations);
+adminRoutes.post('/handle-registration', handleRegistrationApproval);
+adminRoutes.get('/find-active-users', findActiveUsers);
+adminRoutes.post('/admin-logout', adminLogout);
+adminRoutes.get('/profile', getProfile);
+adminRoutes.put('/profile/update', updateProfile);
+// Course Management Routes
+adminRoutes.post('/courses', addCourse);
+adminRoutes.put('/courses/:courseId', editCourse);
+adminRoutes.delete('/courses/:courseId', deleteCourse);
+adminRoutes.get('/courses', getCourses);
 
 
-adminRouter.post('/admin-login',collegeLogin);
-adminRouter.post('/admin-register',collegeRegister);
-
-
-module.exports=adminRouter;
+module.exports = adminRoutes;

@@ -18,6 +18,7 @@ limitations under the License.
 const User = require("../models/userModel");
 const Course = require("../models/courseModel");
 const Enrollment = require("../models/enrollmentModel");
+const PendingRegistration = require("../models/pendingRegistrationModel");
 const {initUsersFile, writeUsersFile, readUsersFile, deleteUsersFile} = require("../controllers/userCredetialController")
 const fs = require("fs");
 
@@ -32,19 +33,28 @@ const register = async (req, res) => {
       });
     }
 
-    const user = await User.create({
+    const existingPending = await PendingRegistration.findOne({ Login: login });
+    if (existingPending) {
+      return res.status(400).json({
+        success: false,
+        message: "Registration request already pending for this email",
+      });
+    }
+
+    const pendingRegistration = await PendingRegistration.create({
       UserCode: userCode,
       Name: name,
       Role: role,
       DOB: DOB,
       Login: login,
-      Password: password
+      Password: password,
+      Status: 'pending'
     });
 
     return res.status(201).json({
       success: true,
-      user,
-      message: "Account Successfully Created",
+      pendingRegistration,
+      message: "Registration request submitted successfully. Waiting for admin approval.",
     });
   } catch (error) {
     console.log("Some error occurred", error);

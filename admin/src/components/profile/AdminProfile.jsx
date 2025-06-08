@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Save, X, User, Eye, EyeOff } from 'lucide-react';
 import './Profile.css';
+import axios from 'axios';
 
 const AdminProfile = () => {
   const [adminInfo, setAdminInfo] = useState(null);
@@ -10,32 +11,29 @@ const AdminProfile = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Mock admin data - replace with actual API call
-    const adminData = {
-      id: 1,
-      usercode: 'ADMIN001',
-      name: 'Admin User',
-      role: 'admin',
-      gmail: 'admin@platform.com',
-      dob: '1990-01-01',
-      department: 'System Administration',
-      position: 'Website Administrator',
-      avatar: null
-    };
-
-    setAdminInfo(adminData);
+    fetchAdminProfile();
   }, []);
+
+  const fetchAdminProfile = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/v2/profile');
+      if (response.data.success) {
+        setAdminInfo(response.data.admin);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch profile');
+    }
+  };
 
   const handleEditProfile = () => {
     setIsEditing(true);
     setEditFormData({
-      name: adminInfo?.name || '',
-      gmail: adminInfo?.gmail || '',
-      dob: adminInfo?.dob || '',
-      department: adminInfo?.department || '',
-      position: adminInfo?.position || '',
+      Name: adminInfo?.Name || '',
+      Login: adminInfo?.Login || '',
+      DOB: adminInfo?.DOB ? new Date(adminInfo.DOB).toISOString().split('T')[0] : '',
       currentPassword: '',
       newPassword: '',
       confirmPassword: ''
@@ -45,6 +43,7 @@ const AdminProfile = () => {
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditFormData({});
+    setError(null);
   };
 
   const handleInputChange = (field, value) => {
@@ -55,27 +54,21 @@ const AdminProfile = () => {
   };
 
   const handleSaveProfile = async () => {
-    // Validate passwords if attempting to change
     if (editFormData.newPassword && editFormData.newPassword !== editFormData.confirmPassword) {
-      alert('Passwords do not match');
+      setError('Passwords do not match');
       return;
     }
 
     setLoading(true);
     try {
-      // TODO: Implement API call to update profile
-      console.log('Updated values:', editFormData);
-      
-      // Update local state
-      const updatedInfo = {
-        ...adminInfo,
-        ...editFormData
-      };
-      setAdminInfo(updatedInfo);
-      setIsEditing(false);
-      alert('Profile updated successfully');
-    } catch (error) {
-      alert('Failed to update profile');
+      const response = await axios.put('http://localhost:5000/api/v2/profile/update', editFormData);
+      if (response.data.success) {
+        setAdminInfo(response.data.admin);
+        setIsEditing(false);
+        setError(null);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -100,7 +93,6 @@ const AdminProfile = () => {
     return new Date(dateString).toLocaleDateString('en-US');
   };
 
-  // Show loading if adminInfo is not loaded yet
   if (!adminInfo) {
     return (
       <div className="loading-container">
@@ -123,6 +115,12 @@ const AdminProfile = () => {
             </button>
           )}
         </div>
+
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
 
         <div className="profile-card">
           <div className="profile-card-content">
@@ -164,7 +162,7 @@ const AdminProfile = () => {
                     <div className="form-group">
                       <label className="form-label">User Code</label>
                       <div className="form-display">
-                        {adminInfo.usercode}
+                        {adminInfo.UserCode}
                       </div>
                     </div>
 
@@ -172,19 +170,19 @@ const AdminProfile = () => {
                       <label className="form-label">Full Name</label>
                       <input 
                         type="text" 
-                        value={editFormData.name || ''}
-                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        value={editFormData.Name || ''}
+                        onChange={(e) => handleInputChange('Name', e.target.value)}
                         className="form-input"
                         required
                       />
                     </div>
                     
                     <div className="form-group">
-                      <label className="form-label">Email</label>
+                      <label className="form-label">Login</label>
                       <input 
-                        type="email" 
-                        value={editFormData.gmail || ''}
-                        onChange={(e) => handleInputChange('gmail', e.target.value)}
+                        type="text" 
+                        value={editFormData.Login || ''}
+                        onChange={(e) => handleInputChange('Login', e.target.value)}
                         className="form-input"
                         required
                       />
@@ -194,30 +192,8 @@ const AdminProfile = () => {
                       <label className="form-label">Date of Birth</label>
                       <input 
                         type="date" 
-                        value={editFormData.dob || ''}
-                        onChange={(e) => handleInputChange('dob', e.target.value)}
-                        className="form-input"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="form-group">
-                      <label className="form-label">Department</label>
-                      <input 
-                        type="text" 
-                        value={editFormData.department || ''}
-                        onChange={(e) => handleInputChange('department', e.target.value)}
-                        className="form-input"
-                        required
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Position</label>
-                      <input 
-                        type="text" 
-                        value={editFormData.position || ''}
-                        onChange={(e) => handleInputChange('position', e.target.value)}
+                        value={editFormData.DOB || ''}
+                        onChange={(e) => handleInputChange('DOB', e.target.value)}
                         className="form-input"
                         required
                       />
@@ -307,49 +283,35 @@ const AdminProfile = () => {
                     <div className="form-group">
                       <label className="form-label">User Code</label>
                       <div className="form-display">
-                        {adminInfo.usercode || 'Not updated'}
+                        {adminInfo.UserCode || 'Not updated'}
                       </div>
                     </div>
 
                     <div className="form-group">
                       <label className="form-label">Full Name</label>
                       <div className="form-display">
-                        {adminInfo.name || 'Not updated'}
+                        {adminInfo.Name || 'Not updated'}
                       </div>
                     </div>
                     
                     <div className="form-group">
-                      <label className="form-label">Email</label>
+                      <label className="form-label">Login</label>
                       <div className="form-display">
-                        {adminInfo.gmail || 'Not updated'}
+                        {adminInfo.Login || 'Not updated'}
                       </div>
                     </div>
                     
                     <div className="form-group">
                       <label className="form-label">Date of Birth</label>
                       <div className="form-display">
-                        {formatDate(adminInfo.dob)}
-                      </div>
-                    </div>
-                    
-                    <div className="form-group">
-                      <label className="form-label">Department</label>
-                      <div className="form-display">
-                        {adminInfo.department || 'Not updated'}
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Position</label>
-                      <div className="form-display">
-                        {adminInfo.position || 'Not updated'}
+                        {formatDate(adminInfo.DOB)}
                       </div>
                     </div>
                     
                     <div className="form-group">
                       <label className="form-label">Role</label>
                       <div className="form-display">
-                        {adminInfo.role || 'Not updated'}
+                        {adminInfo.Role || 'Not updated'}
                       </div>
                     </div>
                   </div>

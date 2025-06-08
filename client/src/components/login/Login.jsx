@@ -21,7 +21,7 @@ function LoginForm() {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/api/v1/login', {
+      const response1 = await fetch('http://localhost:5000/api/v1/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -30,9 +30,9 @@ function LoginForm() {
         body: JSON.stringify(data)
       });
 
-      const result = await response.json();
+      const result1 = await response1.json();
 
-      if (result.success) {
+      if (result1.success) {
         // Store user info in localStorage
         localStorage.setItem('userInfo', JSON.stringify({
           isLoggedIn: true,
@@ -40,9 +40,31 @@ function LoginForm() {
         }));
         // Redirect to home page and reload to show the new navbar
         navigate('/');
-        window.location.reload();
       } else {
-        alert(result.message || 'Login failed');
+        const response2 = await fetch('http://localhost:5000/api/v2/admin-login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(data)
+        });
+  
+        const result2 = await response2.json();
+  
+        if (result2.success) {
+          // Store user info in localStorage
+          localStorage.setItem('userInfo', JSON.stringify({
+            isLoggedIn: true,
+            email: data.login
+          }));
+          // Redirect to home page and reload to show the new navbar
+          window.location.href = 'http://localhost:3001/';
+          //          
+          }
+        else{
+          alert(result2.message || 'Login failed');
+        }
       }
     } catch (error) {
       alert('An error occurred. Please try again.');
