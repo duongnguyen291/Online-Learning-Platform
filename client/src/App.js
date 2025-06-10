@@ -20,9 +20,9 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/courses" element={<CoursePage />} />
-        <Route path='/course/:id' element={<CourseDetailPage />} />
+        <Route path='/course/:courseCode' element={<CourseDetailPage />} />
         <Route path='/courseInner' element={<InnerCoursePage />} />
-        <Route path='/courseDetails' element={<VideoCoursePage />} />
+        <Route path='/course-content/:courseCode/:progressCode' element={<VideoCoursePage />} />
         <Route path='/chatbot' element={<ChatBotPage />}/>
         <Route path='/my-courses' element={<MyCoursesPage />}/>
         <Route path='/profile' element={<StudentProfilePage />}/>

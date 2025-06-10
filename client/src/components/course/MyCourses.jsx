@@ -22,26 +22,26 @@ const MyCourses = () => {
   useEffect(() => {
     // Check if user is logged in
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-    if (!userInfo || !userInfo.isLoggedIn) {
-      navigate('/');
+    if (!userInfo || !userInfo.isLoggedIn || !userInfo.userId) {
+      navigate('/login');
       return;
     }
 
-    fetchEnrolledCourses();
+    fetchEnrolledCourses(userInfo.userId);
   }, [navigate]);
 
-  const fetchEnrolledCourses = async () => {
+  const fetchEnrolledCourses = async (userId) => {
     try {
-      const response = await fetch('http://localhost:5000/api/v1/my-courses', {
+      const response = await fetch(`http://localhost:5000/api/v1/my-courses?userId=${userId}`, {
         method: 'GET',
         credentials: 'include',
       });
 
       if (!response.ok) {
         if (response.status === 401) {
-          // If unauthorized, clear user info and redirect to home
+          // If unauthorized, clear user info and redirect to login
           localStorage.removeItem('userInfo');
-          navigate('/');
+          navigate('/login');
           return;
         }
         throw new Error('Failed to fetch enrolled courses');
@@ -51,7 +51,8 @@ const MyCourses = () => {
       
       if (data.success && data.courses) {
         const formattedCourses = data.courses.map(course => ({
-          id: course.courseCode,
+          id: course._id,
+          courseCode: course.courseCode,
           title: course.name,
           lecturer: course.lecturer,
           status: course.status,
@@ -71,7 +72,6 @@ const MyCourses = () => {
   };
 
   const filteredCourses = myCourses.filter(course => {
-
     return true;
   });
 
@@ -83,6 +83,11 @@ const MyCourses = () => {
 
   const getTitleClass = (title) => {
     return title.length > 40 ? 'mycourses-title long-title' : 'mycourses-title';
+  };
+
+  const handleContinueLearning = (courseCode, progress) => {
+    // Navigate to the course content page with the progress code
+    navigate(`/course-content/${courseCode}/${progress || ''}`);
   };
 
   if (loading) {
@@ -140,7 +145,7 @@ const MyCourses = () => {
                 <Award size={24} />
               </div>
               <div className="mycourses-stat-info">
-                <p className="mycourses-stat-number">{myCourses.reduce((acc, course) => acc + course.score, 0) / myCourses.length || 0}</p>
+                <p className="mycourses-stat-number">{myCourses.length > 0 ? (myCourses.reduce((acc, course) => acc + course.score, 0) / myCourses.length).toFixed(1) : 0}</p>
                 <p className="mycourses-stat-label">Average Score</p>
               </div>
             </div>
@@ -160,7 +165,7 @@ const MyCourses = () => {
                   <div className="mycourses-meta">
                     <div className="mycourses-meta-item">
                       <BookOpen size={14} />
-                      <span>Course Code: {course.progress}</span>
+                      <span>Course Code: {course.courseCode}</span>
                     </div>
                     <div className="mycourses-meta-item">
                       <Award size={14} />
@@ -188,7 +193,10 @@ const MyCourses = () => {
                 </div>
 
                 <div className="mycourses-actions-section">
-                  <button className="mycourses-continue-btn">
+                  <button 
+                    className="mycourses-continue-btn"
+                    onClick={() => handleContinueLearning(course.courseCode, course.progress)}
+                  >
                     <Play size={18} />
                     Continue Learning
                   </button>

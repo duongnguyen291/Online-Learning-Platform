@@ -158,49 +158,6 @@ const LecturerList = () => {
     }
   };
 
-  const pendingColumns = [
-    { title: 'Mã giảng viên', dataIndex: 'usercode', key: 'usercode' },
-    { title: 'Họ tên', dataIndex: 'name', key: 'name' },
-    { title: 'Email', dataIndex: 'login', key: 'login' },
-    { title: 'Đơn vị', dataIndex: 'workplace', key: 'workplace' },
-    {
-      title: 'Trạng thái',
-      key: 'status',
-      render: () => (
-        <span className="status-badge pending">Chờ duyệt</span>
-      ),
-    },
-    {
-      title: 'Thao tác',
-      key: 'actions',
-      render: (_, record) => (
-        <div className="action-buttons">
-          <Button
-            type="primary"
-            icon={<CheckOutlined />}
-            className="approve-btn"
-            onClick={() => handleApprove(record)}
-          >
-            Duyệt
-          </Button>
-          <Button
-            type="default"
-            icon={<CloseOutlined />}
-            className="reject-btn"
-            onClick={() => handleReject(record)}
-          >
-            Từ chối
-          </Button>
-          <Button
-            type="link"
-            onClick={() => showLecturerDetails(record)}
-          >
-            Chi tiết
-          </Button>
-        </div>
-      ),
-    },
-  ];
 
   const activeColumns = [
     { title: 'Mã giảng viên', dataIndex: 'usercode', key: 'usercode' },
@@ -256,14 +213,6 @@ const LecturerList = () => {
       <h2>Quản lý giảng viên</h2>
       
       <Tabs defaultActiveKey="pending" className="user-list-tabs">
-        <TabPane tab="Chờ duyệt" key="pending">
-          <Table
-            dataSource={lecturers.pending}
-            columns={pendingColumns}
-            rowKey="id"
-            loading={loading.pending}
-          />
-        </TabPane>
         <TabPane tab="Đang hoạt động" key="active">
           <Table
             dataSource={lecturers.active}

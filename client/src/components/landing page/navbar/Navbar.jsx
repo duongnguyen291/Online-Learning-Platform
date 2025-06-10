@@ -6,7 +6,8 @@ import { Link, useNavigate, useLocation } from "react-router-dom"
 
 const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userEmail, setUserEmail] = useState('');
+  const [userName, setUserName] = useState('');
+  const [userLogin, setUserLogin] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -16,7 +17,8 @@ const Navbar = () => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     if (userInfo && userInfo.isLoggedIn) {
       setIsLoggedIn(true);
-      setUserEmail(userInfo.email);
+      setUserName(userInfo.name || '');
+      setUserLogin(userInfo.login || '');
     }
   }, []);
 
@@ -27,18 +29,22 @@ const Navbar = () => {
         credentials: 'include',
       });
 
-      if (response.ok) {
-        localStorage.removeItem('userInfo');
-        setIsLoggedIn(false);
-        setUserEmail('');
-        
-        // If we're not on the landing page, navigate to it
-        if (location.pathname !== '/') {
-          navigate('/');
-        }
+      // Always clear localStorage, regardless of server response
+      localStorage.removeItem('userInfo');
+      setIsLoggedIn(false);
+      setUserName('');
+      setUserLogin('');
+      
+      // If we're not on the landing page, navigate to it
+      if (location.pathname !== '/') {
+        navigate('/');
       }
     } catch (error) {
       console.error('Logout failed:', error);
+      // Still clear localStorage even if server request fails
+      localStorage.removeItem('userInfo');
+      setIsLoggedIn(false);
+      navigate('/');
     }
   };
 
@@ -72,7 +78,7 @@ const Navbar = () => {
                 alt="User Avatar" 
                 className="user-avatar"
               />
-              <span className="user-name">{userEmail}</span>
+              <span className="user-name">{userName || userLogin}</span>
               <svg 
                 className={`dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}
                 width="12" 

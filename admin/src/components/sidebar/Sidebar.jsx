@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout, Menu } from 'antd';
 import { GraduationCap } from 'lucide-react';
 
@@ -11,14 +11,19 @@ const { Sider } = Layout;
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [adminInfo, setAdminInfo] = useState(null);
+
+  // Get admin info from localStorage on component mount
+  useEffect(() => {
+    const storedAdminInfo = localStorage.getItem('adminInfo');
+    if (storedAdminInfo) {
+      setAdminInfo(JSON.parse(storedAdminInfo));
+    }
+  }, []);
 
   // Main menu items (excluding logout)
   const mainMenuItems = [
-    {
-      key: '/courses',
-      icon: <BookFilled />,
-      label: 'Quản lý khóa học',
-    },
+  
     {
       key: '/students',
       icon: <TeamOutlined />,
@@ -46,37 +51,47 @@ const Sidebar = () => {
   ];
 
   const handleMenuClick = (item) => {
-    if (item.key === '/logout') {
-      // Handle logout logic here
-      console.log('Logging out...');
-      // You can add your logout logic here, such as:
-      // - Clear user session/tokens
-      // - Redirect to login page
-      // - Call logout API
-      return;
-    }
     navigate(item.key);
   };
 
   const handleLogoutClick = async (item) => {
     if (item.key === '/logout') {
-      
-      // Handle logout logic here
-      const response = await fetch('http://localhost:5000/api/v2/admin-logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      const result = await response.json();
-      if (result.success) {
+      try {
+        // Handle logout logic here
+        const response = await fetch('http://localhost:5000/api/v2/admin-logout', {
+          method: 'POST',
+          credentials: 'include',
+        });
+        
+        const result = await response.json();
+        
+        // Clear admin data from localStorage
+        localStorage.removeItem('adminInfo');
+        // Also clear user data to ensure navbar shows login/logout options
+        localStorage.removeItem('userInfo');
+        
+        if (result.success) {
+          // Redirect to landing page
+          window.location.href = 'http://localhost:3000';
+        } else {
+          alert(result.message || 'Logout failed');
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+        alert('Logout failed. Please try again.');
+        
+        // Still clear localStorage and redirect even if there's an error
+        localStorage.removeItem('adminInfo');
+        localStorage.removeItem('userInfo');
         window.location.href = 'http://localhost:3000';
-        console.log('Logging out...');
-        // Add your logout logic here
-        return;
-      }
-      else{
-        alert(result.message || 'Logout failed');
       }
     }
+  };
+
+  // Get first letter of admin name for avatar
+  const getAvatarLetter = () => {
+    if (!adminInfo || !adminInfo.name) return 'A';
+    return adminInfo.name.charAt(0).toUpperCase();
   };
 
   return (
@@ -120,11 +135,11 @@ const Sidebar = () => {
 
         <div className="user-profile">
           <div className="user-avatar">
-            G
+            {getAvatarLetter()}
           </div>
           <div className="user-info">
-            <h3>Quản trị viên</h3>
-            <p>ADMIN</p>
+            <h3>{adminInfo?.name || 'Quản trị viên'}</h3>
+            <p>{adminInfo?.role || 'ADMIN'}</p>
           </div>
         </div>
       </div>

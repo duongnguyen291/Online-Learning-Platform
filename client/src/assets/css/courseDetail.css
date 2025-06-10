@@ -466,3 +466,331 @@
     font-size: 1.5rem;
   }
 }
+
+/* Loading Spinner */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  padding: 2rem;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error Container */
+.error-container {
+  text-align: center;
+  padding: 2rem;
+  margin: 2rem auto;
+  max-width: 600px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.error-container h2 {
+  color: #e74c3c;
+  margin-bottom: 1rem;
+}
+
+.error-container a {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #3498db;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.error-container a:hover {
+  background-color: #2980b9;
+}
+
+/* Success Message */
+.enrollment-success-message {
+  background-color: #2ecc71;
+  color: white;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+/* Enrollment Status Message */
+.enrollment-status-message {
+  background-color: #f1c40f;
+  color: #2c3e50;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+/* Price Information */
+.course-price-info {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.discounted-price {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2ecc71;
+  margin-right: 0.5rem;
+}
+
+.original-price {
+  font-size: 1.2rem;
+  text-decoration: line-through;
+  color: #7f8c8d;
+  margin-right: 0.5rem;
+}
+
+.discount-percentage {
+  background-color: #e74c3c;
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.regular-price {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2ecc71;
+}
+
+/* Course Rating Display */
+.course-rating-display {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.stars {
+  display: flex;
+}
+
+.star {
+  color: #ddd;
+  font-size: 1.2rem;
+}
+
+.star.filled {
+  color: #f39c12;
+}
+
+.rating-value {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.reviews-count {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+/* What You'll Learn Section */
+.what-learn-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.what-learn-list {
+  list-style-type: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.what-learn-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.check-icon {
+  color: #27ae60;
+  font-weight: bold;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Certification Section */
+.certification-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.certification-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.certificate-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+/* Who This Course Is For Section */
+.who-for-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.who-for-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.target-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+/* Similar Course Styles */
+.similar-course-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+
+.similar-reviews-count {
+  color: #7f8c8d;
+  font-size: 0.8rem;
+}
+
+.similar-course-price {
+  margin-top: 0.5rem;
+}
+
+.similar-discounted-price {
+  font-weight: bold;
+  color: #2ecc71;
+  margin-right: 0.5rem;
+}
+
+.similar-original-price {
+  text-decoration: line-through;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.similar-regular-price {
+  font-weight: bold;
+  color: #2ecc71;
+}
+
+/* Course Description */
+.course-description {
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-line; /* Preserves line breaks in the description */
+}
+
+/* Section Title Styling */
+.section-title {
+  position: relative;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 50px;
+  height: 3px;
+  background-color: #3498db;
+}
+
+/* Enrollment Progress Display */
+.enrollment-progress {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f0f9ff;
+  border: 1px solid #bde0fe;
+  border-radius: 8px;
+}
+
+.enrollment-progress h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #0077b6;
+  font-size: 1.1rem;
+}
+
+.progress-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progress-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #bde0fe;
+}
+
+.progress-item:last-child {
+  border-bottom: none;
+}
+
+.progress-label {
+  font-weight: 500;
+  color: #023e8a;
+}
+
+.progress-value {
+  font-weight: 600;
+  color: #0077b6;
+}
+
+/* Success Message */
+.enrollment-success-message {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+  padding: 1rem;
+  margin: 1rem 0;
+  text-align: center;
+  font-weight: 500;
+}

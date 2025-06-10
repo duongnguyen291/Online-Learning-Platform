@@ -9,24 +9,79 @@ const courseSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    category: {
+        type: String,
+        required: true,
+    },
+    rating: {
+        type: Number,
+        default: 0,
+    },
+    reviews: {
+        type: Number,
+        default: 0,
+    },
+    originalPrice: {
+        type: Number,
+        required: true,
+    },
+    discountedPrice: {
+        type: Number,
+        required: true,
+    },
+    image: {
+        type: String,
+        default: null,
+    },
+    totalLength: {
+        type: String,
+        default: "0h 0m",
+    },
+    language: {
+        type: String,
+        default: 'English',
+    },
     Description: {
         type: String,
         required: true,
     },
+    certification: {
+        type: String,
+        default: '',
+    },
+    whoFor: {
+        type: String,
+        default: '',
+    },
+    whatLearn: {
+        type: [String],
+        default: [],
+    },
     Lecturer: {
         type: String,
-        required: true,
+        default: '',
     },
     RequiredRole: {
         type: String,
         required: true,
     },
-    Status:{
+    Status: {
         type: String,
         required: true,
+    },
+    Lessons: {
+        type: String,
+        default: '0',
+    },
+    chapters: {
+        type: String,
+        default: '0',
     }
 }, {versionKey: false})
 
-const Course = new mongoose.model('Course', courseSchema, 'Course');
+// Add text index for search functionality
+courseSchema.index({ Name: 'text', Description: 'text', category: 'text' });
+
+const Course = mongoose.model('Course', courseSchema, 'Course');
 
 module.exports = Course;

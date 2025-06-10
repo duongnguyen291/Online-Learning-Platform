@@ -1,34 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../../assets/css/course.css';
 import SearchBar from './Searchbar';
-import { coursesData, getAllCourses, courseCategories } from '../../assets/data/courseData';
+import { getAllCourses } from '../../services/courseService';
 
-const Course = ({ title, rating, reviews, image }) => {
+const Course = ({ course }) => {
+  const navigate = useNavigate();
+  
+  const handleSeeDetail = (e) => {
+    e.stopPropagation();
+    
+    // Debug check for courseCode
+    const courseCode = course.CourseCode || course.courseCode;
+    if (!courseCode) {
+      console.error('Course code is undefined:', course);
+      alert('Course code is missing. Please try again later.');
+      return;
+    }
+    
+    navigate(`/course/${courseCode}`);
+  };
+  
   return (
     <div className="course-card">
       <div className="course-image-container">
         <img 
-          src={image || "/path/to/graduation-cap.png"} 
-          alt={title} 
+          src={course.image || "/path/to/graduation-cap.png"} 
+          alt={course.title} 
           className="course-image"
         />
       </div>
       
       <div className="course-details-general">
-        <h3 className="course-title-general">{title}</h3>
+        <h3 className="course-title-general">{course.title}</h3>
         
-        {/* <div className="course-rating">
-          <div className="stars">
-            {[...Array(5)].map((_, index) => (
-              <span key={index} className="star">★</span>
-            ))}
+        {course.rating && (
+          <div className="course-rating">
+            <div className="stars">
+              {[...Array(5)].map((_, index) => (
+                <span key={index} className={`star ${index < Math.floor(course.rating) ? 'filled' : ''}`}>★</span>
+              ))}
+            </div>
+            <span className="rating-value">({course.rating})</span>
+            <span className="review-count">{course.reviews} reviews</span>
           </div>
-          <span className="rating-value">({rating})</span>
-          <span className="review-count">{reviews} </span>
-        </div> */}
+        )}
         
-        <button className="see-detail-button">
+        <button 
+          className="see-detail-button"
+          onClick={handleSeeDetail}
+        >
           See Detail
         </button>
       </div>
@@ -45,20 +66,74 @@ const ProfessionalDegreePage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchResults, setSearchResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [categories, setCategories] = useState(['All Recommendation']);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const coursesPerPage = 20;
 
-  // Get all courses list from the imported function
-  const allCoursesList = getAllCourses();
+  // Fetch courses from the database
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        const coursesData = await getAllCourses();
+        
+        // Format courses to match the expected structure
+        const formattedCourses = coursesData.map(course => ({
+          id: course._id,
+          courseCode: course.CourseCode || course.courseCode,
+          title: course.Name || course.title,
+          description: course.Description || course.description,
+          image: course.image,
+          category: course.category,
+          rating: course.rating,
+          reviews: course.reviews,
+          originalPrice: course.originalPrice,
+          discountedPrice: course.discountedPrice
+        }));
+        
+        setCourses(formattedCourses);
+        
+        // Extract unique categories from courses
+        const uniqueCategories = ['All Recommendation', ...new Set(formattedCourses.map(course => course.category))];
+        setCategories(uniqueCategories);
+        
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to load courses. Please try again later.');
+        setLoading(false);
+      }
+    };
+    
+    fetchCourses();
+  }, []);
   
   // Handle search submission
-  const handleSearch = (results) => {
-    setSearchResults(results);
+  const handleSearch = (term) => {
+    // Filter courses based on search term
+    const filteredCourses = courses.filter(course => 
+      course.title.toLowerCase().includes(term.toLowerCase()) || 
+      course.description.toLowerCase().includes(term.toLowerCase())
+    );
+    
+    // Check if search matches a specific category
+    const matchingCategories = categories.filter(category => 
+      category.toLowerCase().includes(term.toLowerCase())
+    );
+    
+    setSearchResults({
+      term,
+      courses: filteredCourses,
+      categories: matchingCategories
+    });
+    
     setIsSearching(true);
     setCurrentPage(1);
     
     // If a category was selected directly, update activeCategory
-    if (results.categories.length === 1 && results.categories[0] !== 'All Recommendation') {
-      setActiveCategory(results.categories[0]);
+    if (matchingCategories.length === 1 && matchingCategories[0] !== 'All Recommendation') {
+      setActiveCategory(matchingCategories[0]);
       setIsSearching(false); // Use normal category display instead
     }
   };
@@ -76,9 +151,9 @@ const ProfessionalDegreePage = () => {
     if (isSearching && searchResults) {
       filteredCourses = searchResults.courses;
     } else if (activeCategory === 'All Recommendation') {
-      filteredCourses = allCoursesList;
+      filteredCourses = courses;
     } else {
-      filteredCourses = coursesData[activeCategory] || [];
+      filteredCourses = courses.filter(course => course.category === activeCategory);
     }
     
     // Calculate pagination
@@ -89,13 +164,13 @@ const ProfessionalDegreePage = () => {
   
   // Effect to handle category from route state
   useEffect(() => {
-    if (categoryFromState && courseCategories.includes(categoryFromState)) {
+    if (categoryFromState && categories.includes(categoryFromState)) {
       setActiveCategory(categoryFromState);
       setIsSearching(false);
       setSearchResults(null);
       setCurrentPage(1);
     }
-  }, [categoryFromState]);
+  }, [categoryFromState, categories]);
   
   // Reset page to 1 when category changes
   useEffect(() => {
@@ -105,13 +180,13 @@ const ProfessionalDegreePage = () => {
   }, [activeCategory]);
   
   // Calculate total pages
-  const currentCourses = isSearching && searchResults 
+  const currentCoursesData = isSearching && searchResults 
     ? searchResults.courses 
     : (activeCategory === 'All Recommendation' 
-      ? allCoursesList 
-      : (coursesData[activeCategory] || []));
+      ? courses 
+      : courses.filter(course => course.category === activeCategory));
     
-  const totalPages = Math.ceil(currentCourses.length / coursesPerPage);
+  const totalPages = Math.ceil(currentCoursesData.length / coursesPerPage);
   
   // Generate page numbers
   const pageNumbers = [];
@@ -130,23 +205,37 @@ const ProfessionalDegreePage = () => {
   // Check if we should show the "See more" link
   const shouldShowSeeMore = activeCategory !== 'All Recommendation' && !isSearching;
 
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading courses...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-container">
+        <h2>Error</h2>
+        <p>{error}</p>
+        <button onClick={() => window.location.reload()}>Try Again</button>
+      </div>
+    );
+  }
+
   return (
-    // Rest of the component remains unchanged
     <div className="professional-degree-page">
       <header className="page-header">
         <h1>Professional Degree Programs</h1>
         <p>Shape your future with our comprehensive range of professional courses</p>
         
         {/* Use SearchBar component with imported data */}
-        <SearchBar 
-          allCourses={coursesData} 
-          categories={courseCategories} 
-          onSearch={handleSearch} 
-        />
+        <SearchBar onSearch={handleSearch} />
       </header>
 
       <nav className="category-nav">
-        {courseCategories.map((category, index) => (
+        {categories.map((category, index) => (
           <button 
             key={index} 
             className={`category-button ${activeCategory === category && !isSearching ? 'active' : ''}`}
@@ -158,7 +247,9 @@ const ProfessionalDegreePage = () => {
             {category}
           </button>
         ))}
-        <button className="category-button more-button">More</button>
+        {categories.length > 10 && (
+          <button className="category-button more-button">More</button>
+        )}
       </nav>
 
       <section className="courses-section">
@@ -187,18 +278,16 @@ const ProfessionalDegreePage = () => {
         )}
 
         <div className="courses-grid">
-          {getCurrentCourses().map((course) => (
-            <div key={course.id}>
-              <Link to={`/course/${course.id}`} style={{ textDecoration: 'none' }}>
-                <Course 
-                  title={course.title}
-                  rating={course.rating}
-                  reviews={course.reviews}
-                  image={course.image}
-                />
-              </Link>
-            </div>
-          ))}
+          {getCurrentCourses().map((course) => {
+            const courseCode = course.CourseCode || course.courseCode;
+            return (
+              <div key={course.id}>
+                <Link to={courseCode ? `/course/${courseCode}` : '#'} style={{ textDecoration: 'none' }}>
+                  <Course course={course} />
+                </Link>
+              </div>
+            );
+          })}
         </div>
         
         {/* Pagination */}

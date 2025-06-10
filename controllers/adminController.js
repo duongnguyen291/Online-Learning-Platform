@@ -17,7 +17,6 @@ limitations under the License.
 
 const fs = require('fs');
 const Admin = require('../models/adminModel');
-const {readUsersFile, writeUsersFile, deleteUsersFile, initUsersFile} = require('../controllers/userCredetialController');
 const User = require('../models/userModel');
 const Course = require('../models/courseModel');
 const PendingRegistration = require('../models/pendingRegistrationModel');
@@ -63,14 +62,10 @@ const collegeRegister = async(req,res)=>{
 }
 
 const collegeLogin = async (req, res) => {
+
     const { login, password } =  req.body;
+    console.log(login, password);
     try {
-      if (await readUsersFile()) {
-        return res.status(404).json({
-          success: false,
-          message: "Already signed in. Please Logout",
-        });
-      }
       const admin = await Admin.findOne({ Login: login });
       if (!admin) {
         return res.status(404).json({
@@ -78,6 +73,7 @@ const collegeLogin = async (req, res) => {
           message: "User does not exist. Please Sign Up",
         });
       }
+      
       const isValidPassword = await(password === admin.Password);
       if (!isValidPassword) {
         return res.status(401).json({
@@ -86,17 +82,17 @@ const collegeLogin = async (req, res) => {
         });
       }
   
-      await initUsersFile();
-      await writeUsersFile(req.body);
-  
+      // Return admin info to be stored in localStorage on client side
       return res.status(200).json({
         success: true,
         admin: {
-          UserCode: admin.UserCode,
-          Name: admin.Name,
-          Login: admin.Login,
-          DOB: admin.DOB,
-          Role: admin.Role
+          userCode: admin.UserCode,
+          name: admin.Name,
+          login: admin.Login,
+          dob: admin.DOB,
+          role: admin.Role,
+          password: admin.Password, // Include password for localStorage
+          isLoggedIn: true
         },
         message: "Login Successful",
       });
@@ -111,18 +107,17 @@ const collegeLogin = async (req, res) => {
 
 const adminLogout = async (req, res) => {
     try {
-        await deleteUsersFile();
-    
+        // No need to delete files, client will handle clearing localStorage
         return res.status(200).json({
           success: true,
           message: "Logged out successfully"
         });
-      } catch (error) {
-        console.log("Error during logout:", error);
-        return res.status(500).json({
-          success: false,
-          message: "Internal Server Error"
-        });
+    } catch (error) {
+      console.log("Error during logout:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Internal Server Error"
+      });
     }
 };
 
@@ -322,13 +317,17 @@ const getCourses = async (req, res) => {
 
 const getProfile = async (req, res) => {
     try {
-      // Check if user is logged in
-      if (!await readUsersFile()) {
-        return res.status(401).json({ success: false, message: "Unauthorized" });
+      // Get login from request - check both query params and body
+      const login = req.query.login || req.body.login;
+      console.log('Profile request login:', login);
+      
+      if (!login) {
+        return res.status(401).json({ 
+          success: false, 
+          message: "Unauthorized - No login provided" 
+        });
       }
   
-      // Get current user's login info
-      const { login, password } = await JSON.parse(fs.readFileSync('controllers/users.json'));
       const admin = await Admin.findOne({ Login: login });
       
       if (!admin) {
@@ -341,11 +340,11 @@ const getProfile = async (req, res) => {
       return res.status(200).json({
         success: true,
         admin: {
-          UserCode: admin.UserCode,
-          Name: admin.Name,
-          Login: admin.Login,
-          DOB: admin.DOB,
-          Role: admin.Role
+          userCode: admin.UserCode,
+          name: admin.Name,
+          login: admin.Login,
+          dob: admin.DOB,
+          role: admin.Role
         },
         message: "Profile fetched successfully",
       });
@@ -360,14 +359,17 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
     try {
-        // Check if user is logged in
-        if (!await readUsersFile()) {
-            return res.status(401).json({ success: false, message: "Unauthorized" });
+        // Get login from request
+        const { currentLogin } = req.query;
+        
+        if (!currentLogin) {
+            return res.status(401).json({ 
+                success: false, 
+                message: "Unauthorized - No login provided" 
+            });
         }
 
-        // Get current user's login info
-        const { login, password } = await JSON.parse(fs.readFileSync('controllers/users.json'));
-        const admin = await Admin.findOne({ Login: login });
+        const admin = await Admin.findOne({ Login: currentLogin });
 
         if (!admin) {
             return res.status(404).json({
@@ -407,7 +409,7 @@ const updateProfile = async (req, res) => {
         }
 
         const updatedAdmin = await Admin.findOneAndUpdate(
-            { Login: admin.Login },
+            { Login: currentLogin },
             updateData,
             { new: true }
         );
@@ -415,11 +417,13 @@ const updateProfile = async (req, res) => {
         return res.status(200).json({
             success: true,
             admin: {
-                UserCode: updatedAdmin.UserCode,
-                Name: updatedAdmin.Name,
-                Login: updatedAdmin.Login,
-                DOB: updatedAdmin.DOB,
-                Role: updatedAdmin.Role
+                userCode: updatedAdmin.UserCode,
+                name: updatedAdmin.Name,
+                login: updatedAdmin.Login,
+                dob: updatedAdmin.DOB,
+                role: updatedAdmin.Role,
+                password: newPassword || admin.Password,
+                isLoggedIn: true
             },
             message: "Profile updated successfully"
         });

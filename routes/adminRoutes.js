@@ -39,13 +39,16 @@ adminRoutes.get('/pending-registrations', getPendingRegistrations);
 adminRoutes.post('/handle-registration', handleRegistrationApproval);
 adminRoutes.get('/find-active-users', findActiveUsers);
 adminRoutes.post('/admin-logout', adminLogout);
-adminRoutes.get('/profile', getProfile);
+
+// Profile routes - support both GET and POST for flexibility
+adminRoutes.get('/profile', getProfile);  // For query parameter access
+adminRoutes.post('/profile', getProfile); // For body access
 adminRoutes.put('/profile/update', updateProfile);
+
 // Course Management Routes
 adminRoutes.post('/courses', addCourse);
 adminRoutes.put('/courses/:courseId', editCourse);
 adminRoutes.delete('/courses/:courseId', deleteCourse);
 adminRoutes.get('/courses', getCourses);
-
 
 module.exports = adminRoutes;

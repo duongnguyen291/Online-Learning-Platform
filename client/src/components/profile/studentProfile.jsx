@@ -36,19 +36,26 @@ const StudentProfile = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    // Check if user is logged in
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    if (!userInfo || !userInfo.isLoggedIn || !userInfo.userId) {
+      navigate('/login');
+      return;
+    }
 
-  const fetchProfile = async () => {
+    fetchProfile(userInfo.userId);
+  }, [navigate]);
+
+  const fetchProfile = async (userId) => {
     try {
-      const response = await fetch('http://localhost:5000/api/v1/profile', {
+      const response = await fetch(`http://localhost:5000/api/v1/profile?userId=${userId}`, {
         credentials: 'include'
       });
 
       if (!response.ok) {
         if (response.status === 401) {
           localStorage.removeItem('userInfo');
-          navigate('/');
+          navigate('/login');
           return;
         }
         throw new Error('Failed to fetch profile');
@@ -101,7 +108,12 @@ const StudentProfile = () => {
 
   const handleCancel = () => {
     setIsEditing(false);
-    fetchProfile(); // Reload original data
+    
+    // Get userId from localStorage and fetch profile again
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    if (userInfo && userInfo.userId) {
+      fetchProfile(userInfo.userId);
+    }
   };
 
   const getStatusChip = (status) => {
@@ -261,59 +273,63 @@ const StudentProfile = () => {
                   />
                 </div>
 
-                {/* Password Change Section */}
+                <div className="sp-form-actions">
+                  <button onClick={handleCancel} className="sp-btn sp-btn-cancel">
+                    <Cancel fontSize="small" /> Cancel
+                  </button>
+                  <button onClick={handleSave} className="sp-btn sp-btn-save">
+                    <Save fontSize="small" /> Save Changes
+                  </button>
+                </div>
+
                 <div className="sp-password-section">
-                  <h3 className="sp-password-title">
-                    <Lock sx={{ marginRight: 1 }} />
-                    Change Password
-                  </h3>
-                  <div className="sp-form-group">
-                    <label className="sp-form-label">Current Password</label>
-                    <input
-                      type="password"
-                      name="currentPassword"
-                      value={formData.currentPassword}
-                      onChange={handleInputChange}
-                      className="sp-form-input"
-                    />
-                  </div>
-                  <div className="sp-form-row">
-                    <div className="sp-form-group">
-                      <label className="sp-form-label">New Password</label>
-                      <input
-                        type="password"
-                        name="newPassword"
-                        value={formData.newPassword}
-                        onChange={handleInputChange}
-                        className="sp-form-input"
-                      />
+                  <button 
+                    onClick={() => setShowPasswordChange(!showPasswordChange)} 
+                    className="sp-btn sp-btn-password"
+                  >
+                    <Lock fontSize="small" /> Change Password
+                  </button>
+                  
+                  {showPasswordChange && (
+                    <div className="sp-password-form">
+                      <div className="sp-form-group">
+                        <label className="sp-form-label">Current Password</label>
+                        <input
+                          type="password"
+                          name="currentPassword"
+                          value={formData.currentPassword}
+                          onChange={handleInputChange}
+                          className="sp-form-input"
+                        />
+                      </div>
+                      
+                      <div className="sp-form-group">
+                        <label className="sp-form-label">New Password</label>
+                        <input
+                          type="password"
+                          name="newPassword"
+                          value={formData.newPassword}
+                          onChange={handleInputChange}
+                          className="sp-form-input"
+                        />
+                      </div>
+                      
+                      <div className="sp-form-group">
+                        <label className="sp-form-label">Confirm New Password</label>
+                        <input
+                          type="password"
+                          name="confirmPassword"
+                          value={formData.confirmPassword}
+                          onChange={handleInputChange}
+                          className="sp-form-input"
+                        />
+                      </div>
                     </div>
-                    <div className="sp-form-group">
-                      <label className="sp-form-label">Confirm New Password</label>
-                      <input
-                        type="password"
-                        name="confirmPassword"
-                        value={formData.confirmPassword}
-                        onChange={handleInputChange}
-                        className="sp-form-input"
-                      />
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
           </div>
-
-          {isEditing && (
-            <div className="sp-action-buttons">
-              <button className="sp-btn sp-btn-cancel" onClick={handleCancel}>
-                <Cancel /> Cancel
-              </button>
-              <button className="sp-btn sp-btn-save" onClick={handleSave}>
-                <Save /> Save Changes
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

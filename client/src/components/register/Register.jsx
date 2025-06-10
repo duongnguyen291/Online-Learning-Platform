@@ -16,9 +16,6 @@ function Register() {
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData);
     
-    // Add the default role
-    data.role = 'Student';
-
     // Send the data to the backend
     fetch('http://localhost:5000/api/v1/register', {
       method: 'POST',
@@ -67,7 +64,6 @@ function Register() {
       <div className={`sign-container ${isActive ? 'active' : ''}`} id="sign-container">
         <div className="sign-form-container sign-up">
           <form onSubmit={handleSubmit}>
-            <h1>Create Account</h1>
             <div className="sign-social-icons">
               <a href="#" className="icon"><FaGoogle /></a>
               <a href="#" className="icon"><FaFacebookF /></a>
@@ -78,6 +74,12 @@ function Register() {
             <input type="text" name="userCode" placeholder="User Code" required />
             <input type="text" name="name" placeholder="Full Name" required />
             <input type="date" name="DOB" required />
+            <select name="role" required>
+              <option value="">Select Role</option>
+              <option value="Student">Student</option>
+              <option value="Lecturer">Lecturer</option>
+              <option value="Admin">Admin</option>
+            </select>
             <input type="text" name="login" placeholder="Email" required />
             <input type="password" name="password" placeholder="Password" required />
             <button type="submit">Sign Up</button>

@@ -1,46 +1,53 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import '../../assets/css/courseDetail.css';
-import { coursesData, getAllCourses } from '../../assets/data/courseData';
-import { getCourseDetail } from '../../assets/data/courseDetailData';
+import { getCourseById, getSimilarCourses, checkEnrollmentStatus, enrollInCourse } from '../../services/courseService';
 
 const CourseDetail = () => {
-  const { id } = useParams();
+  const { courseCode } = useParams();
   const navigate = useNavigate();
-  const allCourses = getAllCourses();
-  const course = allCourses.find(course => course.id === parseInt(id));
-  const [enrollmentStatus, setEnrollmentStatus] = useState(null); // 'pending', 'enrolled', or null
+  const [course, setCourse] = useState(null);
+  const [similarCourses, setSimilarCourses] = useState([]);
+  const [enrollmentStatus, setEnrollmentStatus] = useState(null);
+  const [progressCode, setProgressCode] = useState(null);
+  const [score, setScore] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  
-  // Get extended course details
-  const courseDetail = getCourseDetail(id);
 
   useEffect(() => {
-    // Check login status
-    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-    setIsLoggedIn(!!userInfo?.isLoggedIn);
-    
-    // If logged in, fetch enrollment status
-    if (userInfo?.isLoggedIn) {
-      fetchEnrollmentStatus();
-    }
-  }, [id]);
+    const fetchData = async () => {
+      try {
+        // Check login status
+        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+        setIsLoggedIn(!!userInfo?.isLoggedIn);
 
-  const fetchEnrollmentStatus = async () => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/v1/enrollment-status/${id}`, {
-        credentials: 'include'
-      });
-      const data = await response.json();
-      if (data.success) {
-        setEnrollmentStatus(data.status);
+        // Fetch course details - try by courseCode first, then by id if it looks like an ObjectId
+        const courseData = await getCourseById(courseCode);
+        setCourse(courseData);
+
+        // If logged in, fetch enrollment status
+        if (userInfo?.isLoggedIn) {
+          const enrollmentData = await checkEnrollmentStatus(courseCode);
+          setEnrollmentStatus(enrollmentData.status);
+          setProgressCode(enrollmentData.progressCode);
+          setScore(enrollmentData.score);
+        }
+
+        // Fetch similar courses
+        const similar = await getSimilarCourses(courseData.category, courseCode);
+        setSimilarCourses(similar);
+
+        setIsLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching enrollment status:', error);
-    }
-  };
+    };
+
+    fetchData();
+  }, [courseCode]);
 
   const handleEnrollClick = async () => {
     if (!isLoggedIn) {
@@ -48,15 +55,20 @@ const CourseDetail = () => {
       return;
     }
 
+    // If already enrolled, navigate to course content
+    if (enrollmentStatus === 'enrolled') {
+      navigate(`/course-content/${courseCode}/${progressCode || ''}`);
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const response = await fetch(`http://localhost:5000/api/v1/enroll/${id}`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-      const data = await response.json();
-      if (data.success) {
-        setEnrollmentStatus('pending');
+      // Use courseCode for enrollment
+      const result = await enrollInCourse(courseCode);
+      if (result.success) {
+        setEnrollmentStatus('enrolled');
+        setProgressCode(result.enrollment.Progress);
+        setScore(result.enrollment.Score);
         setShowSuccessMessage(true);
         // Hide success message after 5 seconds
         setTimeout(() => {
@@ -64,11 +76,30 @@ const CourseDetail = () => {
         }, 5000);
       }
     } catch (error) {
-      console.error('Error enrolling in course:', error);
+      setError('Failed to enroll in course. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading course details...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-container">
+        <h2>Error</h2>
+        <p>{error}</p>
+        <Link to="/courses">Browse all courses</Link>
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -79,27 +110,6 @@ const CourseDetail = () => {
       </div>
     );
   }
-
-  // Get the category directly from the course data itself
-  const courseCategory = course.category;
-  
-  // Helper function to format ratings with commas
-  const formatNumber = (num) => {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-  
-  // Get similar courses based on the same category
-  const getCategoryCourses = () => {
-    // Get courses from the same category, excluding the current course
-    const categoryCourses = coursesData[courseCategory] ? 
-      coursesData[courseCategory].filter(c => c.id !== parseInt(id)) : 
-      [];
-    
-    // Return up to 3 similar courses
-    return categoryCourses.slice(0, 3);
-  };
-  
-  const similarCourses = getCategoryCourses();
 
   const getEnrollButtonText = () => {
     if (isLoading) return 'Processing...';
@@ -127,13 +137,40 @@ const CourseDetail = () => {
     }
   };
 
+  // Format price with commas and currency symbol
+  const formatPrice = (price) => {
+    return `$${price.toLocaleString()}`;
+  };
+
+  // Extract chapter and lesson info from progress code (e.g., "C01 LSE1001" -> Chapter 1, Lesson 1)
+  const getProgressInfo = () => {
+    if (!progressCode) return null;
+    
+    try {
+      const chapterMatch = progressCode.match(/C(\d+)/);
+      const lessonMatch = progressCode.match(/LSE(\d+)/);
+      
+      const chapter = chapterMatch ? parseInt(chapterMatch[1]) : null;
+      const lesson = lessonMatch ? parseInt(lessonMatch[1]) : null;
+      
+      return {
+        chapter,
+        lesson
+      };
+    } catch (err) {
+      return null;
+    }
+  };
+
+  const progressInfo = getProgressInfo();
+
   return (
     <div className="course-detail-container">
       {/* Breadcrumb Navigation */}
       <div className="breadcrumb">
         <Link to="/">Home</Link> | <Link to="/courses">Courses</Link> | 
-        <Link to="/courses" state={{ category: courseCategory }}>
-          {courseCategory}
+        <Link to="/courses" state={{ category: course.category }}>
+          {course.category}
         </Link> | 
         <span className="current-page">{course.title}</span>
       </div>
@@ -149,6 +186,36 @@ const CourseDetail = () => {
             alt={course.title} 
             className="course-detail-image"
           />
+          
+          {/* Price Information */}
+          {course.originalPrice && (
+            <div className="course-price-info">
+              {course.discountedPrice < course.originalPrice ? (
+                <>
+                  <span className="discounted-price">{formatPrice(course.discountedPrice)}</span>
+                  <span className="original-price">{formatPrice(course.originalPrice)}</span>
+                  <span className="discount-percentage">
+                    {Math.round((1 - course.discountedPrice / course.originalPrice) * 100)}% off
+                  </span>
+                </>
+              ) : (
+                <span className="regular-price">{formatPrice(course.originalPrice)}</span>
+              )}
+            </div>
+          )}
+          
+          {/* Rating Display */}
+          {course.rating > 0 && (
+            <div className="course-rating-display">
+              <div className="stars">
+                {[...Array(5)].map((_, index) => (
+                  <span key={index} className={`star ${index < Math.floor(course.rating) ? 'filled' : ''}`}>★</span>
+                ))}
+              </div>
+              <span className="rating-value">{course.rating.toFixed(1)}</span>
+              <span className="reviews-count">({course.reviews.toLocaleString()} reviews)</span>
+            </div>
+          )}
         </div>
 
         {/* Right Side - Course Info */}
@@ -163,7 +230,7 @@ const CourseDetail = () => {
 
           {showSuccessMessage && (
             <div className="enrollment-success-message">
-              Your enrollment request has been sent successfully!
+              You've successfully enrolled in this course!
             </div>
           )}
 
@@ -174,88 +241,136 @@ const CourseDetail = () => {
             </div>
           )}
 
+          {enrollmentStatus === 'enrolled' && progressInfo && (
+            <div className="enrollment-progress">
+              <h3>Your Progress</h3>
+              <div className="progress-details">
+                <div className="progress-item">
+                  <span className="progress-label">Current Chapter:</span>
+                  <span className="progress-value">{progressInfo.chapter}</span>
+                </div>
+                <div className="progress-item">
+                  <span className="progress-label">Current Lesson:</span>
+                  <span className="progress-value">{progressInfo.lesson}</span>
+                </div>
+                <div className="progress-item">
+                  <span className="progress-label">Score:</span>
+                  <span className="progress-value">{score}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="course-specs">
             <div className="spec-item">
               <span className="spec-icon">📋</span>
-              <span className="spec-text">{courseDetail.sections} Sections</span>
+              <span className="spec-text">{course.sections} Sections</span>
             </div>
             <div className="spec-item">
               <span className="spec-icon">📚</span>
-              <span className="spec-text">{courseDetail.lectures} Lectures</span>
+              <span className="spec-text">{course.lectures} Lectures</span>
             </div>
             <div className="spec-item">
               <span className="spec-icon">⏱️</span>
-              <span className="spec-text">{courseDetail.totalLength} total length</span>
+              <span className="spec-text">{course.totalLength}</span>
             </div>
             <div className="spec-item">
               <span className="spec-icon">🔊</span>
-              <span className="spec-text">{courseDetail.language}</span>
+              <span className="spec-text">{course.language}</span>
+            </div>
+            <div className="spec-item">
+              <span className="spec-icon">👨‍🏫</span>
+              <span className="spec-text">Instructor: {course.lecturer}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Course Details Section */}
+      {/* Course Description Section */}
       <div className="course-description-section">
         <h2 className="section-title">Course Details</h2>
-        {courseDetail.description.map((paragraph, index) => (
-          <p key={index} className="description-text">{paragraph}</p>
-        ))}
+        <div className="course-description">
+          {course.description}
+        </div>
       </div>
+
+      {/* What You'll Learn Section */}
+      {course.whatLearn && course.whatLearn.length > 0 && (
+        <div className="what-learn-section">
+          <h2 className="section-title">What You'll Learn</h2>
+          <ul className="what-learn-list">
+            {course.whatLearn.map((item, index) => (
+              <li key={index} className="what-learn-item">
+                <span className="check-icon">✓</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Certification Section */}
-      <div className="certification-section">
-        <h2 className="section-title">Certification</h2>
-        <p className="description-text">{courseDetail.certification}</p>
-      </div>
+      {course.certification && (
+        <div className="certification-section">
+          <h2 className="section-title">Certification</h2>
+          <div className="certification-content">
+            <span className="certificate-icon">🎓</span>
+            <p>{course.certification}</p>
+          </div>
+        </div>
+      )}
 
-      {/* Who this course is for Section */}
-      <div className="who-for-section">
-        <h2 className="section-title">Who this course is for</h2>
-        <p className="description-text">{courseDetail.whoFor}</p>
-      </div>
-
-      {/* What you'll learn Section */}
-      <div className="what-learn-section">
-        <h2 className="section-title">What you'll learn in this course:</h2>
-        <ul className="learn-list">
-          {courseDetail.whatLearn.map((item, index) => (
-            <li key={index} className="learn-item">{item}</li>
-          ))}
-        </ul>
-      </div>
+      {/* Who This Course Is For Section */}
+      {course.whoFor && (
+        <div className="who-for-section">
+          <h2 className="section-title">Who This Course Is For</h2>
+          <div className="who-for-content">
+            <span className="target-icon">🎯</span>
+            <p>{course.whoFor}</p>
+          </div>
+        </div>
+      )}
 
       {/* Similar Courses Section */}
-      <div className="similar-courses-section">
-        <div className="similar-header">
+      {similarCourses.length > 0 && (
+        <div className="similar-courses-section">
           <h2 className="section-title">Similar Courses</h2>
-          <Link to="/courses" state={{ category: courseCategory }} className="see-more-link">
-            See more &gt;
-          </Link>
-        </div>
-        
-        <div className="similar-courses-grid">
-          {similarCourses.map((similarCourse) => (
-            <div key={similarCourse.id} className="similar-course-card">
-              <Link to={`/course/${similarCourse.id}`} className="similar-course-link">
+          <div className="similar-courses-grid">
+            {similarCourses.map(similarCourse => (
+              <Link 
+                key={similarCourse._id}
+                to={`/course/${similarCourse.courseCode}`}
+                className="similar-course-card"
+              >
                 <div className="similar-course-image-container">
-                  <img
-                    src={similarCourse.image || "/path/to/default-course-image.png"}
-                    alt={similarCourse.title}
+                  <img 
+                    src={similarCourse.image || "/path/to/default-image.jpg"}
+                    alt={similarCourse.Name} 
                     className="similar-course-image"
                   />
                 </div>
                 <div className="similar-course-details">
-                  <h3 className="similar-course-title">{similarCourse.title}</h3>
-                  <p className="similar-course-desc">
-                    Comprehensive course on {similarCourse.title.toLowerCase()} with expert instruction and practical exercises.
-                  </p>
+                  <h4 className="similar-course-title">{similarCourse.Name}</h4>
+                  <div className="similar-course-rating">
+                    
+                    <span className="rating-value">({similarCourse.rating})</span>
+                  </div>
+                  <div className="similar-course-price">
+                    {similarCourse.discountedPrice !== similarCourse.originalPrice ? (
+                      <>
+                        <span className="discounted-price">${similarCourse.discountedPrice}</span>
+                        <span className="original-price">${similarCourse.originalPrice}</span>
+                      </>
+                    ) : (
+                      <span className="regular-price">${similarCourse.originalPrice}</span>
+                    )}
+                  </div>
                 </div>
               </Link>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

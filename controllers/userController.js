@@ -19,8 +19,6 @@ const User = require("../models/userModel");
 const Course = require("../models/courseModel");
 const Enrollment = require("../models/enrollmentModel");
 const PendingRegistration = require("../models/pendingRegistrationModel");
-const {initUsersFile, writeUsersFile, readUsersFile, deleteUsersFile} = require("../controllers/userCredetialController")
-const fs = require("fs");
 
 const register = async (req, res) => {
   const { userCode, name, role, DOB, login, password } = req.body;
@@ -66,14 +64,8 @@ const register = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-  const { login, password } =  req.body;
+  const { login, password } = req.body;
   try {
-    if (await readUsersFile()) {
-      return res.status(404).json({
-        success: false,
-        message: "Already signed in. Please Logout",
-      });
-    }
     const user = await User.findOne({ Login: login });
     if (!user) {
       return res.status(404).json({
@@ -89,17 +81,20 @@ const loginUser = async (req, res) => {
       });
     }
 
-    await initUsersFile();
-    await writeUsersFile(req.body);
-
-
+    // Send user info to be stored in localStorage on client side
     return res.status(200).json({
       success: true,
-      login, password,
-      message: "Login Successfull",
+      user: {
+        login,
+        password,
+        userCode: user.UserCode,
+        name: user.Name,
+        role: user.Role
+      },
+      message: "Login Successful",
     });
   } catch (error) {
-    console.log("Some error occured", error);
+    console.log("Some error occurred", error);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -109,7 +104,8 @@ const loginUser = async (req, res) => {
 
 const logoutUser = async (req, res) => {
   try {
-    await deleteUsersFile();
+    // No need to delete server-side files anymore
+    // Client will clear localStorage
 
     return res.status(200).json({
       success: true,
@@ -126,24 +122,18 @@ const logoutUser = async (req, res) => {
 
 const getCourses = async (req, res) => {
   try {
-    // Check if user is logged in
-    if (!await readUsersFile()) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+    // Get user info from request
+    const { userId } = req.query;
+    
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized - No user ID provided" });
     }
 
-    // Get current user's login info
-    const { login, password } = await JSON.parse(fs.readFileSync('controllers/users.json'));
-
-    // Find the user to get their UserCode
-    const user = await User.findOne({Login: login});
-    const userCode = user.UserCode;
-
     // Find all enrollments for this user
-    const enrollments = await Enrollment.find({ UserCode: userCode });  
-    //console.log(enrollments);
+    const enrollments = await Enrollment.find({ UserCode: userId });
+    
     // Extract all course codes from enrollments
     const courseCodes = enrollments.map(enrollment => enrollment.CourseCode);
-    console.log(courseCodes);
 
     // Find all courses that match these course codes
     const courses = await Course.find({ CourseCode: { $in: courseCodes } });
@@ -161,7 +151,6 @@ const getCourses = async (req, res) => {
         enrollmentDate: enrollment.StartDate
       };
     });
-    console.log(coursesWithProgress);
 
     return res.status(200).json({
       success: true,
@@ -179,14 +168,19 @@ const getCourses = async (req, res) => {
 
 const getProfile = async (req, res) => {
   try {
-    // Check if user is logged in
-    if (!await readUsersFile()) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+    // Get user info from request
+    const { userId } = req.query;
+    
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized - No user ID provided" });
     }
 
-    // Get current user's login info
-    const { login, password } = await JSON.parse(fs.readFileSync('controllers/users.json'));
-    const user = await User.findOne({Login: login});
+    const user = await User.findOne({ UserCode: userId });
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    
     return res.status(200).json({
       success: true,
       user,

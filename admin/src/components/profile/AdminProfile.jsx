@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Save, X, User, Eye, EyeOff } from 'lucide-react';
+import { User } from 'lucide-react';
 import './Profile.css';
 import axios from 'axios';
 
@@ -10,7 +10,7 @@ const AdminProfile = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -18,13 +18,86 @@ const AdminProfile = () => {
   }, []);
 
   const fetchAdminProfile = async () => {
+    console.log('Fetching admin profile...');
     try {
-      const response = await axios.get('http://localhost:5000/api/v2/profile');
-      if (response.data.success) {
-        setAdminInfo(response.data.admin);
+      const storedAdminInfo = localStorage.getItem('adminInfo');
+      console.log('Raw stored admin info:', storedAdminInfo);
+      
+      if (!storedAdminInfo) {
+        setError('Admin information not found. Please log in again.');
+        setLoading(false);
+        return;
+      }
+      
+      let parsedAdminInfo;
+      try {
+        parsedAdminInfo = JSON.parse(storedAdminInfo);
+        console.log('Parsed admin info:', parsedAdminInfo);
+      } catch (err) {
+        console.error('Error parsing admin info from localStorage:', err);
+        setError('Invalid admin information. Please log in again.');
+        setLoading(false);
+        return;
+      }
+      
+      if (!parsedAdminInfo.login) {
+        console.error('No login found in admin info');
+        setError('Invalid admin information. Please log in again.');
+        setLoading(false);
+        return;
+      }
+      
+      // Try GET request with query params first
+      try {
+        console.log('Attempting GET request...');
+        const response = await axios.get(`http://localhost:5000/api/v2/profile?login=${parsedAdminInfo.login}`);
+        console.log('GET response:', response.data);
+        
+        if (response.data.success) {
+          console.log('Setting admin info from GET response:', response.data.admin);
+          setAdminInfo({
+            UserCode: response.data.admin.userCode,
+            Name: response.data.admin.name,
+            Login: response.data.admin.login,
+            DOB: response.data.admin.dob,
+            Role: response.data.admin.role
+          });
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.log('GET request failed, trying POST...', err);
+      }
+      
+      // If GET fails, try POST with body
+      console.log('Attempting POST request...');
+      try {
+        const response = await axios.post('http://localhost:5000/api/v2/profile', {
+          login: parsedAdminInfo.login
+        });
+        console.log('POST response:', response.data);
+        
+        if (response.data.success) {
+          console.log('Setting admin info from POST response:', response.data.admin);
+          setAdminInfo({
+            UserCode: response.data.admin.userCode,
+            Name: response.data.admin.name,
+            Login: response.data.admin.login,
+            DOB: response.data.admin.dob,
+            Role: response.data.admin.role
+          });
+        } else {
+          setError(response.data.message || 'Failed to fetch profile data');
+        }
+      } catch (err) {
+        console.error('POST request error:', err);
+        setError(err.response?.data?.message || 'Failed to fetch profile data');
       }
     } catch (err) {
+      console.error('Error fetching profile:', err);
       setError(err.response?.data?.message || 'Failed to fetch profile');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,13 +134,55 @@ const AdminProfile = () => {
 
     setLoading(true);
     try {
-      const response = await axios.put('http://localhost:5000/api/v2/profile/update', editFormData);
+      const storedAdminInfo = localStorage.getItem('adminInfo');
+      if (!storedAdminInfo) {
+        setError('Admin information not found. Please log in again.');
+        return;
+      }
+      
+      const parsedAdminInfo = JSON.parse(storedAdminInfo);
+      
+      // Add the current login to the form data
+      const updatedFormData = {
+        ...editFormData,
+        currentLogin: parsedAdminInfo.login
+      };
+      
+      const response = await axios.put(
+        `http://localhost:5000/api/v2/profile/update?currentLogin=${parsedAdminInfo.login}`, 
+        updatedFormData
+      );
+      
       if (response.data.success) {
-        setAdminInfo(response.data.admin);
+        // Update local state
+        setAdminInfo({
+          UserCode: response.data.admin.userCode,
+          Name: response.data.admin.name,
+          Login: response.data.admin.login,
+          DOB: response.data.admin.dob,
+          Role: response.data.admin.role
+        });
+        
+        // Update localStorage
+        const updatedAdminInfo = {
+          ...parsedAdminInfo,
+          name: response.data.admin.name,
+          login: response.data.admin.login,
+          role: response.data.admin.role,
+          dob: response.data.admin.dob
+        };
+        
+        if (editFormData.newPassword) {
+          updatedAdminInfo.password = editFormData.newPassword;
+        }
+        
+        localStorage.setItem('adminInfo', JSON.stringify(updatedAdminInfo));
+        
         setIsEditing(false);
         setError(null);
       }
     } catch (err) {
+      console.error('Error updating profile:', err);
       setError(err.response?.data?.message || 'Failed to update profile');
     } finally {
       setLoading(false);
@@ -93,10 +208,27 @@ const AdminProfile = () => {
     return new Date(dateString).toLocaleDateString('en-US');
   };
 
-  if (!adminInfo) {
+  if (loading) {
     return (
       <div className="loading-container">
         <div className="loading-text">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="loading-container">
+        <div className="loading-text error-message">{error}</div>
+        <button onClick={fetchAdminProfile} className="btn-primary">Retry</button>
+      </div>
+    );
+  }
+
+  if (!adminInfo) {
+    return (
+      <div className="loading-container">
+        <div className="loading-text">No profile data found. Please log in again.</div>
       </div>
     );
   }
@@ -145,174 +277,135 @@ const AdminProfile = () => {
                     onChange={handleAvatarChange}
                     className="avatar-upload-input"
                   />
-                  <button 
-                    className="avatar-upload-btn"
-                    onClick={() => document.getElementById('avatar-upload').click()}
-                  >
-                    <Camera size={16} />
+                  <label htmlFor="avatar-upload" className="avatar-upload-btn">
                     Change Photo
-                  </button>
+                  </label>
                 </div>
               </div>
 
-              {/* Form Section */}
+              {/* Profile Info Section */}
               <div className="profile-form">
-                {isEditing ? (
+                {!isEditing ? (
                   <div className="form-fields">
                     <div className="form-group">
-                      <label className="form-label">User Code</label>
-                      <div className="form-display">
-                        {adminInfo.UserCode}
-                      </div>
+                      <label className="form-label">Name</label>
+                      <div className="form-display">{adminInfo.Name || 'Not set'}</div>
                     </div>
-
                     <div className="form-group">
-                      <label className="form-label">Full Name</label>
-                      <input 
-                        type="text" 
-                        value={editFormData.Name || ''}
-                        onChange={(e) => handleInputChange('Name', e.target.value)}
-                        className="form-input"
-                        required
-                      />
+                      <label className="form-label">Email/Login</label>
+                      <div className="form-display">{adminInfo.Login || 'Not set'}</div>
                     </div>
-                    
-                    <div className="form-group">
-                      <label className="form-label">Login</label>
-                      <input 
-                        type="text" 
-                        value={editFormData.Login || ''}
-                        onChange={(e) => handleInputChange('Login', e.target.value)}
-                        className="form-input"
-                        required
-                      />
-                    </div>
-                    
                     <div className="form-group">
                       <label className="form-label">Date of Birth</label>
-                      <input 
-                        type="date" 
-                        value={editFormData.DOB || ''}
-                        onChange={(e) => handleInputChange('DOB', e.target.value)}
+                      <div className="form-display">{formatDate(adminInfo.DOB)}</div>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Role</label>
+                      <div className="form-display">{adminInfo.Role || 'Admin'}</div>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">User Code</label>
+                      <div className="form-display">{adminInfo.UserCode || 'Not available'}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="form-fields">
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="name">Name</label>
+                      <input
+                        type="text"
+                        id="name"
                         className="form-input"
-                        required
+                        value={editFormData.Name || ''}
+                        onChange={(e) => handleInputChange('Name', e.target.value)}
                       />
                     </div>
-
-                    {/* Password Section */}
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="email">Email/Login</label>
+                      <input
+                        type="email"
+                        id="email"
+                        className="form-input"
+                        value={editFormData.Login || ''}
+                        onChange={(e) => handleInputChange('Login', e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="dob">Date of Birth</label>
+                      <input
+                        type="date"
+                        id="dob"
+                        className="form-input"
+                        value={editFormData.DOB || ''}
+                        onChange={(e) => handleInputChange('DOB', e.target.value)}
+                      />
+                    </div>
+                    
                     <div className="password-section">
-                      <h3 className="password-section-title">
-                        Change Password (Optional)
-                      </h3>
+                      <h3 className="password-section-title">Change Password</h3>
                       
                       <div className="form-group">
-                        <label className="form-label">Current Password</label>
+                        <label className="form-label" htmlFor="current-password">Current Password</label>
                         <div className="password-input-wrapper">
-                          <input 
+                          <input
                             type={showCurrentPassword ? "text" : "password"}
+                            id="current-password"
+                            className="form-input password-input"
                             value={editFormData.currentPassword || ''}
                             onChange={(e) => handleInputChange('currentPassword', e.target.value)}
-                            className="form-input password-input"
                           />
                           <button
                             type="button"
-                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                             className="password-toggle-btn"
+                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                           >
-                            {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            {showCurrentPassword ? 'Hide' : 'Show'}
                           </button>
                         </div>
                       </div>
-
                       <div className="form-group">
-                        <label className="form-label">New Password</label>
+                        <label className="form-label" htmlFor="new-password">New Password</label>
                         <div className="password-input-wrapper">
-                          <input 
+                          <input
                             type={showNewPassword ? "text" : "password"}
+                            id="new-password"
+                            className="form-input password-input"
                             value={editFormData.newPassword || ''}
                             onChange={(e) => handleInputChange('newPassword', e.target.value)}
-                            className="form-input password-input"
                           />
                           <button
                             type="button"
-                            onClick={() => setShowNewPassword(!showNewPassword)}
                             className="password-toggle-btn"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
                           >
-                            {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            {showNewPassword ? 'Hide' : 'Show'}
                           </button>
                         </div>
                       </div>
-
                       <div className="form-group">
-                        <label className="form-label">Confirm New Password</label>
+                        <label className="form-label" htmlFor="confirm-password">Confirm New Password</label>
                         <div className="password-input-wrapper">
-                          <input 
+                          <input
                             type={showConfirmPassword ? "text" : "password"}
+                            id="confirm-password"
+                            className="form-input password-input"
                             value={editFormData.confirmPassword || ''}
                             onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                            className="form-input password-input"
                           />
                           <button
                             type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             className="password-toggle-btn"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           >
-                            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            {showConfirmPassword ? 'Hide' : 'Show'}
                           </button>
                         </div>
                       </div>
                     </div>
                     
                     <div className="profile-actions">
-                      <button 
-                        className="btn-primary" 
-                        onClick={handleSaveProfile}
-                        disabled={loading}
-                      >
-                        <Save size={16} />
-                        {loading ? 'Saving...' : 'Save Changes'}
-                      </button>
-                      <button className="btn-secondary" onClick={handleCancelEdit}>
-                        <X size={16} />
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="form-fields">
-                    <div className="form-group">
-                      <label className="form-label">User Code</label>
-                      <div className="form-display">
-                        {adminInfo.UserCode || 'Not updated'}
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Full Name</label>
-                      <div className="form-display">
-                        {adminInfo.Name || 'Not updated'}
-                      </div>
-                    </div>
-                    
-                    <div className="form-group">
-                      <label className="form-label">Login</label>
-                      <div className="form-display">
-                        {adminInfo.Login || 'Not updated'}
-                      </div>
-                    </div>
-                    
-                    <div className="form-group">
-                      <label className="form-label">Date of Birth</label>
-                      <div className="form-display">
-                        {formatDate(adminInfo.DOB)}
-                      </div>
-                    </div>
-                    
-                    <div className="form-group">
-                      <label className="form-label">Role</label>
-                      <div className="form-display">
-                        {adminInfo.Role || 'Not updated'}
-                      </div>
+                      <button className="btn-secondary" onClick={handleCancelEdit}>Cancel</button>
+                      <button className="btn-primary" onClick={handleSaveProfile}>Save Changes</button>
                     </div>
                   </div>
                 )}

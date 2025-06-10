@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Sync</title>
+</head>
+<body>
+    <script>
+        // Listen for messages from the client site
+        window.addEventListener('message', function(event) {
+            // Verify the origin to ensure security
+            if (event.origin === 'http://localhost:3000') {
+                try {
+                    // Check if the message is the admin data
+                    if (event.data && event.data.type === 'SYNC_ADMIN_DATA') {
+                        // Store the admin data in localStorage
+                        localStorage.setItem('adminInfo', JSON.stringify(event.data.adminInfo));
+                        console.log('Admin data saved to localStorage:', event.data.adminInfo);
+                    }
+                } catch (error) {
+                    console.error('Error processing message:', error);
+                }
+            }
+        });
+
+        // Notify the parent window that we're ready
+        window.parent.postMessage({ type: 'AUTH_SYNC_READY' }, 'http://localhost:3000');
+    </script>
+</body>
+</html> 

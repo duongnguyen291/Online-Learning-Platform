@@ -24,6 +24,7 @@ const cors = require('cors');
 dotenv.config();
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const courseRoutes = require('./routes/courseRoutes');
 const cookieParser = require('cookie-parser');
 const socketService = require('./middlewares/socketService');
 // Initialize Express app and setup middlewares
@@ -55,6 +56,7 @@ socketService(io);
 // API routes
 
 app.use('/api/v1', userRoutes);
+app.use('/api/v1', courseRoutes);
 app.use('/api/v2', adminRoutes);
 
 
