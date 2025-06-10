@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Chatbot.css';
+import { useNavigate } from 'react-router-dom';
 
 // API functions
 const API_BASE_URL = 'http://localhost:8000/api/rag';
@@ -58,7 +59,20 @@ const getContext = async (query) => {
   return response.json();
 };
 
-const Chatbot = () => {
+const suggestLearningPath = async (userId) => {
+  const response = await fetch(`${API_BASE_URL}/suggest-learning-path/${userId}`, {
+    method: 'POST',
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to get learning path suggestion');
+  }
+  
+  return response.json();
+};
+
+const Chatbot = ({ userId }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -71,6 +85,7 @@ const Chatbot = () => {
   
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+  const navigate = useNavigate();
 
   // Auto-scroll to the bottom when new messages arrive
   useEffect(() => {
@@ -477,23 +492,135 @@ const Chatbot = () => {
     setActiveConversation(id);
   };
   
+  const handleLearningPathSuggestion = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Add a user message to show the request
+      const userMessage = {
+        id: Date.now().toString(),
+        content: "Vui lòng gợi ý lộ trình học phù hợp cho tôi.",
+        sender: 'user',
+        timestamp: new Date()
+      };
+      
+      const updatedMessages = [...messages, userMessage];
+      setMessages(updatedMessages);
+      
+      // Get learning path suggestion
+      const result = await suggestLearningPath(userId);
+      
+      if (result.status === 'success') {
+        // Format the recommendation for better display
+        const formattedRecommendation = `🎯 Gợi ý lộ trình học của bạn:
+
+${result.recommendation}
+
+${result.courses ? `
+📚 Các khóa học được đề xuất:
+${result.courses.map((course, index) => `
+${index + 1}. ${course.name}
+   - Độ khó: ${course.difficulty}
+   - Thời lượng: ${course.estimatedHours} giờ
+   - Chủ đề: ${course.topics.join(', ')}
+`).join('')}` : ''}
+
+${result.nextSteps ? `
+⭐ Các bước tiếp theo:
+${result.nextSteps.map((step, index) => `${index + 1}. ${step}`).join('\n')}` : ''}
+
+Bạn có thể nhấn "Xem chi tiết" để xem thông tin chi tiết hơn về lộ trình học này.`;
+
+        const aiMessage = {
+          id: Date.now().toString(),
+          content: formattedRecommendation,
+          sender: 'ai',
+          timestamp: new Date(),
+          sources: result.sources,
+          type: 'learning_path'
+        };
+        
+        const finalMessages = [...updatedMessages, aiMessage];
+        setMessages(finalMessages);
+        
+        // Update conversation
+        const updatedConversations = conversations.map(conv => {
+          if (conv.id === activeConversation) {
+            return {
+              ...conv,
+              messages: finalMessages,
+              name: 'Gợi ý lộ trình học'
+            };
+          }
+          return conv;
+        });
+        
+        setConversations(updatedConversations);
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      const errorMessage = {
+        id: Date.now().toString(),
+        content: `❌ Không thể lấy gợi ý lộ trình học: ${error.message}. Vui lòng thử lại sau.`,
+        sender: 'ai',
+        timestamp: new Date()
+      };
+      
+      const updatedMessages = [...messages, errorMessage];
+      setMessages(updatedMessages);
+      
+      // Update conversation
+      const updatedConversations = conversations.map(conv => {
+        if (conv.id === activeConversation) {
+          return {
+            ...conv,
+            messages: updatedMessages
+          };
+        }
+        return conv;
+      });
+      
+      setConversations(updatedConversations);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="ai-chat-container">
       {/* Left Sidebar */}
       <div className={`ai-chat-sidebar`}>
-        
-        <button 
-        className="new-chat-button"
-        onClick={handleNewChat}
-        aria-label="Start New Chat"
-        >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 5v14"></path>
-            <path d="M5 12h14"></path>
-        </svg>
-        <span>New chat</span>
-        </button>
+        <div className="sidebar-header">
+          <button 
+            className="new-chat-button"
+            onClick={handleNewChat}
+            aria-label="Start New Chat"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14"></path>
+              <path d="M5 12h14"></path>
+            </svg>
+            <span>New chat</span>
+          </button>
+
+          {userId && (
+            <button
+              className="suggest-path-button"
+              onClick={handleLearningPathSuggestion}
+              disabled={isLoading}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              <span>Gợi ý lộ trình</span>
+            </button>
+          )}
+        </div>
         
         <div className="conversation-list">
           {conversations.map((conversation) => (
@@ -535,6 +662,15 @@ const Chatbot = () => {
             <div className="welcome-message">
               <h3>Xin chào, tôi có thể giúp gì cho bạn?</h3>
               <p>Hãy hỏi tôi bất cứ điều gì và tôi sẽ cố gắng hết sức để giúp bạn!</p>
+              {userId && (
+                <button
+                  className="suggest-path-button"
+                  onClick={handleLearningPathSuggestion}
+                  disabled={isLoading}
+                >
+                  Gợi ý lộ trình học
+                </button>
+              )}
             </div>
           ) : (
             messages.map((message) => (
@@ -544,7 +680,17 @@ const Chatbot = () => {
               >
                 <div className="message-content">
                   <div className="message-header">
-                    <span className="sender-name">{message.sender === 'user' ? 'You' : 'AI Assistant'}</span>
+                    <span className="sender-name">
+                      {message.sender === 'user' ? 'You' : 'AI Assistant'}
+                    </span>
+                    {message.type === 'learning_path' && (
+                      <button
+                        className="view-details-button"
+                        onClick={() => navigate('/learning-path')}
+                      >
+                        Xem chi tiết
+                      </button>
+                    )}
                   </div>
                   <div className="message-text">
                     {message.content}

@@ -23,36 +23,73 @@
 
 /* Sidebar styling */
 .ai-chat-sidebar {
-  width: 250px;
-  background-color: var(--background-color);
-  border-right: 1px solid var(--border-color);
+  width: 260px;
+  background: #f7f7f8;
+  border-right: 1px solid #e5e5e5;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease;
-  z-index: 10;
+  height: 100%;
+  overflow: hidden;
 }
 
-/* New chat button */
-.new-chat-button {
-  width: 90%;
-  padding: 10px 12px;
-  margin: 16px auto;
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 20px;
+.sidebar-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e5e5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.new-chat-button,
+.suggest-path-button {
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  gap: 8px;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.5rem;
+  background: white;
+  color: #374151;
+  font-size: 0.875rem;
   font-weight: 500;
-  box-shadow: 0 2px 4px var(--shadow-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
 }
 
-.new-chat-button:hover {
-  background-color: #b71c1c; /* Darker red on hover */
+.new-chat-button:hover,
+.suggest-path-button:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.new-chat-button:active,
+.suggest-path-button:active {
+  background: #e5e7eb;
+}
+
+.new-chat-button:disabled,
+.suggest-path-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.suggest-path-button {
+  background: #4f46e5;
+  color: white;
+  border: none;
+}
+
+.suggest-path-button:hover {
+  background: #4338ca;
+}
+
+.suggest-path-button:active {
+  background: #3730a3;
+}
+
+.suggest-path-button svg {
+  stroke: currentColor;
 }
 
 /* Conversation list */
@@ -523,4 +560,14 @@ textarea {
 .source-item small {
   color: #666;
   font-size: 12px;
+}
+.view-details-button {
+  background-color: #2196F3;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+  font-size: 0.9em;
 }
