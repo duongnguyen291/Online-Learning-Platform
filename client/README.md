@@ -1,22 +1,25 @@
-# Hospital Landing Page using React JS
+# Setup
 
-A beautiful hospital landing page built with React JS
-
-![screenshot](/screenshot.png)
-
-## Tech Stack
-
- React JS
-
-## Installation
-
-Download the zip file. In the project folder:
-
-```bash
-  npm install
-  npm start
+Create .env file
+```
+PORT = 3000
 ```
 
-## Authors
+Install dependencies
+```
+npm install
+```
 
-- [@realtutorialspoint](https://www.github.com/realtutorialspoint)
+# Run
+
+Start admin fe server
+```
+npm start
+```
+
+Test lecturer account
+
+```
+phong.tran@email.com
+phong123
+```

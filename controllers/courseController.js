@@ -235,10 +235,15 @@ exports.enrollInCourse = async (req, res) => {
             });
         }
 
+        // Generate a unique enrollment code
+        const enrollmentCode = `ENR-${userId.substring(0, 4)}-${finalCourseCode}-${Date.now().toString().substring(9, 13)}`;
+
         // Create new enrollment
         const newEnrollment = new Enrollment({
+            EnrollmentCode: enrollmentCode,
             CourseCode: finalCourseCode,
             UserCode: userId,
+            StartDate: new Date(),
             Progress: 'C01 LSE1001', // Default to first chapter, first lesson
             Score: 0,
             Status: 'Active'

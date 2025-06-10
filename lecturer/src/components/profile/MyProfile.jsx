@@ -2,64 +2,70 @@ import React, { useState, useEffect } from 'react';
 import { Camera, Save, X, User } from 'lucide-react';
 import './MyProfile.css';
 
-// Import AdminData
-class AdminData {
-  constructor() {
-    this.adminInfo = {
-      id: 'admin001',
-      fullName: 'Nguyễn Văn A',
-      email: 'gvien@email.com',
-      phone: '0123456789',
-      specialization: 'Lập trình Web, Mobile',
-      bio: 'Giảng viên với 8 năm kinh nghiệm trong lĩnh vực phát triển phần mềm và đào tạo lập trình.',
-      avatar: null,
-      joinDate: '2020-01-15',
-      totalCourses: 12,
-      totalStudents: 1245,
-      completionRate: 89,
-      weeklyClasses: 24
-    };
-  }
-
-  getAdminInfo() {
-    return { ...this.adminInfo };
-  }
-
-  updateAdminInfo(updatedInfo) {
-    this.adminInfo = {
-      ...this.adminInfo,
-      ...updatedInfo
-    };
-    return this.adminInfo;
-  }
-
-  updateAvatar(avatarData) {
-    this.adminInfo.avatar = avatarData;
-    return this.adminInfo;
-  }
-}
-
-const adminData = new AdminData();
-
 const MyProfile = () => {
-  const [adminInfo, setAdminInfo] = useState(null);
+  const [lecturerInfo, setLecturerInfo] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Load admin data when component mounts
-    const data = adminData.getAdminInfo();
-    setAdminInfo(data);
+    // Load lecturer data from localStorage
+    const storedInfo = localStorage.getItem('lecturerInfo');
+    if (storedInfo) {
+      try {
+        const parsedInfo = JSON.parse(storedInfo);
+        
+        // Fetch additional profile data from the server
+        fetchLecturerProfile(parsedInfo.userId);
+      } catch (error) {
+        console.error('Error parsing lecturer info:', error);
+        setError('Failed to load profile data');
+        setIsLoading(false);
+      }
+    } else {
+      // No stored info, use dummy data
+      setLecturerInfo({
+        UserCode: 'LECT1234',
+        Name: 'Lecturer Name',
+        Role: 'Lecturer',
+        DOB: new Date().toISOString().split('T')[0],
+        Login: 'lecturer@example.com',
+        Password: '********'
+      });
+      setIsLoading(false);
+    }
   }, []);
+
+  const fetchLecturerProfile = async (userId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/v3/profile?userId=${userId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setLecturerInfo(data.user);
+      } else {
+        throw new Error(data.message || 'Failed to load profile');
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      setError('Failed to load profile data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleEditProfile = () => {
     setIsEditing(true);
     setEditFormData({
-      fullName: adminInfo?.fullName || '',
-      email: adminInfo?.email || '',
-      phone: adminInfo?.phone || '',
-      specialization: adminInfo?.specialization || '',
-      bio: adminInfo?.bio || ''
+      Name: lecturerInfo?.Name || '',
+      Login: lecturerInfo?.Login || '',
+      DOB: lecturerInfo?.DOB ? new Date(lecturerInfo.DOB).toISOString().split('T')[0] : ''
     });
   };
 
@@ -75,29 +81,34 @@ const MyProfile = () => {
     }));
   };
 
-  const handleSaveProfile = () => {
-    const updatedInfo = adminData.updateAdminInfo(editFormData);
-    setAdminInfo(updatedInfo);
+  const handleSaveProfile = async () => {
+    setIsLoading(true);
+    
+    // In a real implementation, you would update the profile on the server
+    // For now, we'll just update the local state
+    setLecturerInfo(prev => ({
+      ...prev,
+      ...editFormData
+    }));
+    
     setIsEditing(false);
+    setIsLoading(false);
   };
 
-  const handleAvatarChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const updatedInfo = adminData.updateAvatar(e.target.result);
-        setAdminInfo(updatedInfo);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Show loading if adminInfo is not loaded yet
-  if (!adminInfo) {
+  // Show loading if lecturerInfo is not loaded yet
+  if (isLoading) {
     return (
       <div className="loading-container">
         <div className="loading-text">Đang tải thông tin...</div>
+      </div>
+    );
+  }
+
+  // Show error if there was an error loading the profile
+  if (error) {
+    return (
+      <div className="error-container">
+        <div className="error-text">{error}</div>
       </div>
     );
   }
@@ -123,30 +134,7 @@ const MyProfile = () => {
               {/* Avatar Section */}
               <div className="profile-avatar-section">
                 <div className="profile-avatar-large">
-                  {adminInfo.avatar ? (
-                    <img 
-                      src={adminInfo.avatar} 
-                      alt="Avatar"
-                    />
-                  ) : (
-                    <User size={48} className="avatar-icon" />
-                  )}
-                </div>
-                <div>
-                  <input
-                    type="file"
-                    id="avatar-upload"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
-                    className="avatar-upload-input"
-                  />
-                  <button 
-                    className="avatar-upload-btn"
-                    onClick={() => document.getElementById('avatar-upload').click()}
-                  >
-                    <Camera size={16} />
-                    Thay đổi ảnh
-                  </button>
+                  <User size={48} className="avatar-icon" />
                 </div>
               </div>
 
@@ -158,8 +146,8 @@ const MyProfile = () => {
                       <label className="form-label">Họ và tên</label>
                       <input 
                         type="text" 
-                        value={editFormData.fullName || ''}
-                        onChange={(e) => handleInputChange('fullName', e.target.value)}
+                        value={editFormData.Name || ''}
+                        onChange={(e) => handleInputChange('Name', e.target.value)}
                         className="form-input"
                       />
                     </div>
@@ -168,39 +156,19 @@ const MyProfile = () => {
                       <label className="form-label">Email</label>
                       <input 
                         type="email" 
-                        value={editFormData.email || ''}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        value={editFormData.Login || ''}
+                        onChange={(e) => handleInputChange('Login', e.target.value)}
                         className="form-input"
                       />
                     </div>
                     
                     <div className="form-group">
-                      <label className="form-label">Số điện thoại</label>
+                      <label className="form-label">Ngày sinh</label>
                       <input 
-                        type="tel" 
-                        value={editFormData.phone || ''}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        type="date" 
+                        value={editFormData.DOB || ''}
+                        onChange={(e) => handleInputChange('DOB', e.target.value)}
                         className="form-input"
-                      />
-                    </div>
-                    
-                    <div className="form-group">
-                      <label className="form-label">Chuyên môn</label>
-                      <input 
-                        type="text" 
-                        value={editFormData.specialization || ''}
-                        onChange={(e) => handleInputChange('specialization', e.target.value)}
-                        className="form-input"
-                      />
-                    </div>
-                    
-                    <div className="form-group">
-                      <label className="form-label">Giới thiệu</label>
-                      <textarea 
-                        rows="4" 
-                        value={editFormData.bio || ''}
-                        onChange={(e) => handleInputChange('bio', e.target.value)}
-                        className="form-textarea"
                       />
                     </div>
                     
@@ -218,44 +186,37 @@ const MyProfile = () => {
                 ) : (
                   <div className="form-fields">
                     <div className="form-group">
+                      <label className="form-label">Mã người dùng</label>
+                      <div className="form-display">
+                        {lecturerInfo.UserCode || 'Chưa cập nhật'}
+                      </div>
+                    </div>
+                    
+                    <div className="form-group">
                       <label className="form-label">Họ và tên</label>
                       <div className="form-display">
-                        {adminInfo.fullName || 'Chưa cập nhật'}
+                        {lecturerInfo.Name || 'Chưa cập nhật'}
                       </div>
                     </div>
                     
                     <div className="form-group">
                       <label className="form-label">Email</label>
                       <div className="form-display">
-                        {adminInfo.email || 'Chưa cập nhật'}
+                        {lecturerInfo.Login || 'Chưa cập nhật'}
                       </div>
                     </div>
                     
                     <div className="form-group">
-                      <label className="form-label">Số điện thoại</label>
+                      <label className="form-label">Vai trò</label>
                       <div className="form-display">
-                        {adminInfo.phone || 'Chưa cập nhật'}
+                        {lecturerInfo.Role || 'Chưa cập nhật'}
                       </div>
                     </div>
                     
                     <div className="form-group">
-                      <label className="form-label">Chuyên môn</label>
+                      <label className="form-label">Ngày sinh</label>
                       <div className="form-display">
-                        {adminInfo.specialization || 'Chưa cập nhật'}
-                      </div>
-                    </div>
-                    
-                    <div className="form-group">
-                      <label className="form-label">Giới thiệu</label>
-                      <div className="form-display bio-display">
-                        {adminInfo.bio || 'Chưa cập nhật'}
-                      </div>
-                    </div>
-                    
-                    <div className="form-group">
-                      <label className="form-label">Ngày tham gia</label>
-                      <div className="form-display">
-                        {adminInfo.joinDate ? new Date(adminInfo.joinDate).toLocaleDateString('vi-VN') : 'Chưa cập nhật'}
+                        {lecturerInfo.DOB ? new Date(lecturerInfo.DOB).toLocaleDateString('vi-VN') : 'Chưa cập nhật'}
                       </div>
                     </div>
                   </div>

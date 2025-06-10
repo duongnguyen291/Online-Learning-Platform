@@ -1,12 +1,10 @@
 import React from 'react';
-import AdminPanel from '../components/menu/AdminPanel';
+import LecturerPanel from '../components/menu/LecturerPanel';
 
-function MainMenuPage() {
+const MainMenuPage = () => {
   return (
-    <>
-      <AdminPanel/>
-    </>
+    <LecturerPanel/>
   );
-}
+};
 
 export default MainMenuPage;

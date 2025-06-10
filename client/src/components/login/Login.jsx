@@ -6,7 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 function LoginForm() {
   const [isActive, setIsActive] = useState(false);
   const [error, setError] = useState('');
-  const [userType, setUserType] = useState('student'); // 'student' or 'admin'
+  const [userType, setUserType] = useState('student'); // 'student', 'admin', or 'lecturer'
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -34,12 +34,22 @@ function LoginForm() {
             'Content-Type': 'application/json',
           },
           credentials: 'include',
-          body: JSON.stringify(data)
+          body: JSON.stringify({
+            ...data,
+            role: 'Student'
+          })
         });
 
         const result = await response.json();
 
         if (result.success) {
+          // Verify the user is actually a student
+          if (result.user.role !== 'Student') {
+            setError('Access denied. This account is not a student account.');
+            setIsLoading(false);
+            return;
+          }
+          
           // Store user info in localStorage
           localStorage.setItem('userInfo', JSON.stringify({
             isLoggedIn: true,
@@ -47,14 +57,86 @@ function LoginForm() {
             password: result.user.password,
             userId: result.user.userCode,
             name: result.user.name,
-            role: result.user.role || 'student'
+            role: result.user.role
           }));
-          
+            
           // Redirect to home page
           navigate('/');
         } else {
           setError(result.message || 'Login failed. Please check your credentials.');
         }
+      } else if (userType === 'lecturer') {
+        // Lecturer login - using the same endpoint as student login
+        const response = await fetch('http://localhost:5000/api/v1/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            ...data,
+            role: 'Lecturer'
+          })
+        });
+
+        const result = await response.json();
+        console.log(result);
+
+        if (result.success) {
+          // Verify the user is actually a lecturer
+          if (result.user.role !== 'Lecturer') {
+            setError('Access denied. This account is not a lecturer account.');
+            setIsLoading(false);
+            return;
+          }
+          
+          // Create lecturer info object
+          const lecturerInfo = {
+            isLoggedIn: true,
+            login: result.user.login,
+            password: result.user.password,
+            userId: result.user.userCode,
+            name: result.user.name,
+            role: result.user.role
+          };
+          
+          // Store in client localStorage
+          localStorage.setItem('lecturerInfo', JSON.stringify(lecturerInfo));
+          
+          // Method 1: Use localStorage synchronization via iframe
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = 'http://localhost:3002/auth-sync.html';
+          document.body.appendChild(iframe);
+          
+          // Wait for iframe to load
+          iframe.onload = () => {
+            // Send lecturer info to iframe
+            iframe.contentWindow.postMessage({
+              type: 'SYNC_LECTURER_DATA',
+              lecturerInfo: lecturerInfo
+            }, 'http://localhost:3002');
+            
+            // Redirect after a short delay to ensure data is saved
+            setTimeout(() => {
+              window.location.href = 'http://localhost:3002/';
+            }, 500);
+          };
+          
+          // Fallback if iframe method fails
+          setTimeout(() => {
+            // Remove iframe if it's still there
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+              
+              // Use URL parameters as fallback
+              const encodedLecturerInfo = encodeURIComponent(JSON.stringify(lecturerInfo));
+              window.location.href = `http://localhost:3002/auth?lecturerData=${encodedLecturerInfo}`;
+            }
+          }, 2000);
+        } else if (!result.success) {
+          setError(result.message || 'Login failed. Please check your credentials.');
+        } 
       } else {
         // Admin login
         const response = await fetch('http://localhost:5000/api/v2/admin-login', {
@@ -63,12 +145,22 @@ function LoginForm() {
             'Content-Type': 'application/json',
           },
           credentials: 'include',
-          body: JSON.stringify(data)
+          body: JSON.stringify({
+            ...data,
+            role: 'Admin'
+          })
         });
-
+  
         const result = await response.json();
-
+  
         if (result.success) {
+          // Verify the user is actually an admin
+          if (result.admin.role !== 'admin' && result.admin.role !== 'Admin') {
+            setError('Access denied. This account is not an admin account.');
+            setIsLoading(false);
+            return;
+          }
+          
           // Create admin info object
           const adminInfo = {
             isLoggedIn: true,
@@ -155,6 +247,16 @@ function LoginForm() {
                   onChange={() => setUserType('student')}
                 />
                 <span>Student</span>
+              </label>
+              <label>
+                <input 
+                  type="radio" 
+                  name="userType" 
+                  value="lecturer" 
+                  checked={userType === 'lecturer'} 
+                  onChange={() => setUserType('lecturer')}
+                />
+                <span>Lecturer</span>
               </label>
               <label>
                 <input 

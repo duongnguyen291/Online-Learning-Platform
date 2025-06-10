@@ -18,44 +18,53 @@ limitations under the License.
 const User = require("../models/userModel");
 const Course = require("../models/courseModel");
 const Enrollment = require("../models/enrollmentModel");
-const PendingRegistration = require("../models/pendingRegistrationModel");
 
 const register = async (req, res) => {
   const { userCode, name, role, DOB, login, password } = req.body;
+  
   try {
+    // Validate role
+    if (!['Student', 'Lecturer'].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid role. Only Student and Lecturer roles are allowed."
+      });
+    }
+
+    // Check if user already exists
     const existingUser = await User.findOne({ Login: login });
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: "User already Exists",
+        message: "User already exists",
       });
     }
 
-    const existingPending = await PendingRegistration.findOne({ Login: login });
-    if (existingPending) {
-      return res.status(400).json({
-        success: false,
-        message: "Registration request already pending for this email",
-      });
+    // Generate a unique UserCode if not provided
+    let finalUserCode = userCode;
+    if (!finalUserCode) {
+      const prefix = role === 'Student' ? 'STU' : 'LEC';
+      const random = Math.floor(1000 + Math.random() * 9000);
+      finalUserCode = `${prefix}${random}`;
     }
 
-    const pendingRegistration = await PendingRegistration.create({
-      UserCode: userCode,
+    // Create the user directly
+    const user = await User.create({
+      UserCode: finalUserCode,
       Name: name,
       Role: role,
       DOB: DOB,
       Login: login,
-      Password: password,
-      Status: 'pending'
+      Password: password
     });
 
     return res.status(201).json({
       success: true,
-      pendingRegistration,
-      message: "Registration request submitted successfully. Waiting for admin approval.",
+      user,
+      message: "Registration successful! You can now log in.",
     });
   } catch (error) {
-    console.log("Some error occurred", error);
+    console.error("Registration error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -64,7 +73,7 @@ const register = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-  const { login, password } = req.body;
+  const { login, password, role } = req.body;
   try {
     const user = await User.findOne({ Login: login });
     if (!user) {
@@ -78,6 +87,14 @@ const loginUser = async (req, res) => {
       return res.status(401).json({
         success: false,
         message: "Invalid Credentials",
+      });
+    }
+
+    // Check if the user's role matches the requested role
+    if (role && user.Role.toLowerCase() !== role.toLowerCase()) {
+      return res.status(403).json({
+        success: false,
+        message: `Access denied. This account is not a ${role} account.`,
       });
     }
 

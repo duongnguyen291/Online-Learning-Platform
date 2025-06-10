@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Auth Sync</title>
+    <title>Lecturer Auth Sync</title>
 </head>
 <body>
     <script>
@@ -11,15 +11,15 @@
         window.addEventListener('message', (event) => {
             // Verify the origin for security
             if (event.origin === 'http://localhost:3000') {
-                const { type, adminInfo } = event.data;
+                const { type, lecturerInfo } = event.data;
                 
-                if (type === 'SYNC_ADMIN_DATA' && adminInfo) {
+                if (type === 'SYNC_LECTURER_DATA' && lecturerInfo) {
                     try {
-                        // Store admin info in localStorage
-                        localStorage.setItem('adminInfo', JSON.stringify(adminInfo));
-                        console.log('Admin data synchronized successfully');
+                        // Store lecturer info in localStorage
+                        localStorage.setItem('lecturerInfo', JSON.stringify(lecturerInfo));
+                        console.log('Lecturer data synchronized successfully');
                     } catch (error) {
-                        console.error('Error synchronizing admin data:', error);
+                        console.error('Error synchronizing lecturer data:', error);
                     }
                 }
             }

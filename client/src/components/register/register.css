@@ -204,15 +204,14 @@
 }
 
 .error-message {
-    color: #dc2626;
-    background-color: #fef2f2;
-    border: 1px solid #fee2e2;
-    border-radius: 8px;
+    color: #f44336;
+    background-color: #ffebee;
     padding: 10px;
+    border-radius: 4px;
     margin: 10px 0;
     font-size: 14px;
-    width: 100%;
     text-align: center;
+    width: 100%;
 }
 
 .registration-status-container {

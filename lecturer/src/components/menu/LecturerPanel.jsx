@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import Sidebar from '../sidebar/Sidebar';
-import './AdminPanel.css';
+import './LecturerPanel.css';
 import NotificationPanel from './NotificationPanel';
 import MyCourses from '../courses/MyCourses';
 import MyProfile from '../profile/MyProfile';
 import EditCoursePage from '../../pages/EditCoursePage';
 import CreateCoursePage from '../../pages/CreateCoursePage';
 import { Bell, Search } from 'lucide-react';
-import { getCourses, addCourse, updateCourse, deleteCourse } from '../../data/courseData';
 
-const AdminPanel = () => {
+const LecturerPanel = () => {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('courses');
   const [courses, setCourses] = useState([]);
@@ -20,7 +19,7 @@ const AdminPanel = () => {
 
 useEffect(() => {
     // Load initial data
-    setCourses(getCourses());
+    setCourses([]);
 }, []);
 
   const handleMenuClick = (menuId) => {
@@ -33,13 +32,13 @@ useEffect(() => {
     // Update URL based on menu selection
     switch (menuId) {
       case 'courses':
-        navigate('/admin/courses');
+        navigate('/courses');
         break;
       case 'profile':
-        navigate('/admin/profile');
+        navigate('/profile');
         break;
       default:
-        navigate('/admin');
+        navigate('/courses');
     }
   };
   
@@ -57,8 +56,6 @@ useEffect(() => {
 
   // Course management handlers
   const handleCreateCourse = (courseData) => {
-    addCourse(courseData);
-    setCourses(getCourses());
     // Add notification
     const newNotification = {
       id: `notification_${Date.now()}`,
@@ -71,8 +68,6 @@ useEffect(() => {
   };
 
   const handleEditCourse = (courseData) => {
-    updateCourse(courseData.id, courseData);
-    setCourses(getCourses());
     // Add notification
     const newNotification = {
       id: `notification_${Date.now()}`,
@@ -86,8 +81,6 @@ useEffect(() => {
 
   const handleDeleteCourse = (courseId) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa khóa học này?')) {
-      deleteCourse(courseId);
-      setCourses(getCourses());
       // Add notification
       const newNotification = {
         id: `notification_${Date.now()}`,
@@ -101,7 +94,7 @@ useEffect(() => {
   };
 
   return (
-    <div className="admin-panel">
+    <div className="lecturer-panel">
       <Sidebar activeMenu={activeMenu} onMenuClick={handleMenuClick} />
       
       <div className="main-content">
@@ -178,4 +171,4 @@ useEffect(() => {
   );
 };
 
-export default AdminPanel;
+export default LecturerPanel;

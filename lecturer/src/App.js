@@ -1,17 +1,17 @@
 import React from 'react';
 import './App.css';
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import AdminPanel from './components/menu/AdminPanel';
+import LecturerPanel from './components/menu/LecturerPanel';
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Redirect root to admin panel */}
-        <Route path="/" element={<Navigate to="/admin" replace />} />
+        {/* Redirect root to lecturer panel */}
+        <Route path="/" element={<Navigate to="/courses" replace />} />
         
-        {/* Admin routes */}
-        <Route path="/admin/*" element={<AdminPanel />} />
+        {/* Lecturer routes */}
+        <Route path="/*" element={<LecturerPanel />} />
       </Routes>
     </Router>
   );

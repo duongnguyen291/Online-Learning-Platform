@@ -19,8 +19,6 @@ const express = require('express');
 const {
     collegeRegister, 
     collegeLogin, 
-    getPendingRegistrations, 
-    handleRegistrationApproval, 
     findActiveUsers, 
     adminLogout,
     addCourse,
@@ -30,25 +28,19 @@ const {
     getProfile,
     updateProfile
 } = require('../controllers/adminController');
+const { isAdmin } = require('../middlewares/authMiddleware');
 
 const adminRoutes = express.Router();
 
 adminRoutes.post('/admin-login', collegeLogin);
 adminRoutes.post('/admin-register', collegeRegister);
-adminRoutes.get('/pending-registrations', getPendingRegistrations);
-adminRoutes.post('/handle-registration', handleRegistrationApproval);
-adminRoutes.get('/find-active-users', findActiveUsers);
-adminRoutes.post('/admin-logout', adminLogout);
-
-// Profile routes - support both GET and POST for flexibility
-adminRoutes.get('/profile', getProfile);  // For query parameter access
-adminRoutes.post('/profile', getProfile); // For body access
-adminRoutes.put('/profile/update', updateProfile);
-
-// Course Management Routes
-adminRoutes.post('/courses', addCourse);
-adminRoutes.put('/courses/:courseId', editCourse);
-adminRoutes.delete('/courses/:courseId', deleteCourse);
-adminRoutes.get('/courses', getCourses);
+adminRoutes.get('/find-active-users', isAdmin, findActiveUsers);
+adminRoutes.post('/logout', isAdmin, adminLogout);
+adminRoutes.post('/add-course', isAdmin, addCourse);
+adminRoutes.put('/edit-course/:courseId', isAdmin, editCourse);
+adminRoutes.delete('/delete-course/:courseId', isAdmin, deleteCourse);
+adminRoutes.get('/courses', isAdmin, getCourses);
+adminRoutes.get('/profile', isAdmin, getProfile);
+adminRoutes.put('/profile', isAdmin, updateProfile);
 
 module.exports = adminRoutes;

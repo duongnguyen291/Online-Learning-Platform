@@ -25,6 +25,7 @@ dotenv.config();
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const courseRoutes = require('./routes/courseRoutes');
+const lecturerRoutes = require('./routes/lecturerRoutes');
 const cookieParser = require('cookie-parser');
 const socketService = require('./middlewares/socketService');
 // Initialize Express app and setup middlewares
@@ -33,7 +34,7 @@ connectDb(); // Connect database
 
 // Configure CORS
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:5174"],
+  origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:5174"],
   credentials: true
 }));
 
@@ -45,7 +46,7 @@ app.use(cookieParser());
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001","https://virtual-classroom-admin.vercel.app","https://virtual-classroom-application.vercel.app"],
+    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002","https://virtual-classroom-admin.vercel.app","https://virtual-classroom-application.vercel.app"],
     methods: ["GET", "POST"],
     credentials: true
   },
@@ -58,6 +59,7 @@ socketService(io);
 app.use('/api/v1', userRoutes);
 app.use('/api/v1', courseRoutes);
 app.use('/api/v2', adminRoutes);
+app.use('/api/v3', lecturerRoutes);
 
 
 // Health check route

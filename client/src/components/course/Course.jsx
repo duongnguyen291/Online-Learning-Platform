@@ -36,10 +36,10 @@ const Course = ({ course }) => {
         
         {course.rating && (
           <div className="course-rating">
-            <div className="stars">
-              {[...Array(5)].map((_, index) => (
+          <div className="stars">
+            {[...Array(5)].map((_, index) => (
                 <span key={index} className={`star ${index < Math.floor(course.rating) ? 'filled' : ''}`}>★</span>
-              ))}
+            ))}
             </div>
             <span className="rating-value">({course.rating})</span>
             <span className="review-count">{course.reviews} reviews</span>
@@ -248,7 +248,7 @@ const ProfessionalDegreePage = () => {
           </button>
         ))}
         {categories.length > 10 && (
-          <button className="category-button more-button">More</button>
+        <button className="category-button more-button">More</button>
         )}
       </nav>
 
@@ -281,11 +281,11 @@ const ProfessionalDegreePage = () => {
           {getCurrentCourses().map((course) => {
             const courseCode = course.CourseCode || course.courseCode;
             return (
-              <div key={course.id}>
+            <div key={course.id}>
                 <Link to={courseCode ? `/course/${courseCode}` : '#'} style={{ textDecoration: 'none' }}>
                   <Course course={course} />
-                </Link>
-              </div>
+              </Link>
+            </div>
             );
           })}
         </div>

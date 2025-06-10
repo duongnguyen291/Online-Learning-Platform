@@ -19,7 +19,6 @@ const fs = require('fs');
 const Admin = require('../models/adminModel');
 const User = require('../models/userModel');
 const Course = require('../models/courseModel');
-const PendingRegistration = require('../models/pendingRegistrationModel');
 
 const collegeRegister = async(req,res)=>{
     const {Name, Login, DOB, Password, Role}=req.body;
@@ -63,7 +62,7 @@ const collegeRegister = async(req,res)=>{
 
 const collegeLogin = async (req, res) => {
 
-    const { login, password } =  req.body;
+    const { login, password, role } =  req.body;
     console.log(login, password);
     try {
       const admin = await Admin.findOne({ Login: login });
@@ -79,6 +78,14 @@ const collegeLogin = async (req, res) => {
         return res.status(401).json({
           success: false,
           message: "Invalid Credentials",
+        });
+      }
+
+      // Check if the requested role is 'admin'
+      if (role && role.toLowerCase() !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: "Access denied. This endpoint is for admin accounts only.",
         });
       }
   
@@ -118,76 +125,6 @@ const adminLogout = async (req, res) => {
         success: false,
         message: "Internal Server Error"
       });
-    }
-};
-
-const getPendingRegistrations = async (req, res) => {
-    try {
-        const pendingRegistrations = await PendingRegistration.find({ Status: 'pending' });
-        return res.status(200).json({
-            success: true,
-            pendingRegistrations
-        });
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        });
-    }
-};
-
-const handleRegistrationApproval = async (req, res) => {
-    const { registrationId, action } = req.body;
-    
-    try {
-        const registration = await PendingRegistration.findById(registrationId);
-        if (!registration) {
-            return res.status(404).json({
-                success: false,
-                message: "Registration request not found"
-            });
-        }
-
-        if (action === 'approve') {
-            // Create the user
-            const user = await User.create({
-                UserCode: registration.UserCode,
-                Name: registration.Name,
-                Role: registration.Role,
-                DOB: registration.DOB,
-                Login: registration.Login,
-                Password: registration.Password
-            });
-
-            // Update registration status
-            registration.Status = 'approved';
-            await registration.save();
-
-            return res.status(200).json({
-                success: true,
-                message: "Registration approved successfully",
-                user
-            });
-        } else if (action === 'reject') {
-            registration.Status = 'rejected';
-            await registration.save();
-
-            return res.status(200).json({
-                success: true,
-                message: "Registration rejected successfully"
-            });
-        }
-
-        return res.status(400).json({
-            success: false,
-            message: "Invalid action"
-        });
-    } catch (error) {
-        console.error("Error handling registration approval:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        });
     }
 };
 
@@ -437,12 +374,10 @@ const updateProfile = async (req, res) => {
     }
 };
 
-module.exports={
+module.exports = {
     collegeRegister,
     collegeLogin,
-    getPendingRegistrations,
-    handleRegistrationApproval, 
-    findActiveUsers, 
+    findActiveUsers,
     adminLogout,
     addCourse,
     editCourse,

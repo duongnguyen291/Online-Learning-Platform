@@ -11,6 +11,8 @@ import ChatBotPage from './pages/ChatBotPage';
 import InnerCoursePage from './pages/InnerCoursePage';
 import MyCoursesPage from './pages/MyCoursesPage';
 import StudentProfilePage from './pages/StudentProfilePage';
+import ProtectedRoute from './components/ProtectedRoute';
+
 function App() {
   return (
     <>
@@ -20,12 +22,36 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/courses" element={<CoursePage />} />
-        <Route path='/course/:courseCode' element={<CourseDetailPage />} />
-        <Route path='/courseInner' element={<InnerCoursePage />} />
-        <Route path='/course-content/:courseCode/:progressCode' element={<VideoCoursePage />} />
-        <Route path='/chatbot' element={<ChatBotPage />}/>
-        <Route path='/my-courses' element={<MyCoursesPage />}/>
-        <Route path='/profile' element={<StudentProfilePage />}/>
+        <Route path='/course/:courseCode' element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <CourseDetailPage />
+          </ProtectedRoute>
+        } />
+        <Route path='/courseInner' element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <InnerCoursePage />
+          </ProtectedRoute>
+        } />
+        <Route path='/course-content/:courseCode/:progressCode' element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <VideoCoursePage />
+          </ProtectedRoute>
+        } />
+        <Route path='/chatbot' element={
+          <ProtectedRoute allowedRoles={['student', 'lecturer']}>
+            <ChatBotPage />
+          </ProtectedRoute>
+        } />
+        <Route path='/my-courses' element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <MyCoursesPage />
+          </ProtectedRoute>
+        } />
+        <Route path='/profile' element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <StudentProfilePage />
+          </ProtectedRoute>
+        } />
       </Routes>
     </Router>
     <ChatbotBubble />

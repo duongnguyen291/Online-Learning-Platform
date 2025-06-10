@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import CourseEditor from '../components/courses/CourseEditor';
 import './CourseEditorPage.css';
 
-const CourseEditorPage = ({ courses = [], onEditCourse, onCreateCourse }) => {
+const CourseEditorPage = ({ courses = [], onEditCourse, onCreateCourse, onUpdateCourse }) => {
   const navigate = useNavigate();
   const { courseId } = useParams();
   
@@ -15,11 +15,12 @@ const CourseEditorPage = ({ courses = [], onEditCourse, onCreateCourse }) => {
     } else {
       onCreateCourse(courseData);
     }
-    navigate('/admin/courses');
+    onUpdateCourse(courseId, courseData);
+    navigate('/lecturer/courses');
   };
 
   const handleCancel = () => {
-    navigate('/admin/courses');
+    navigate('/lecturer/courses');
   };
 
   return (

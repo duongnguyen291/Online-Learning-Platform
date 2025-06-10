@@ -1,4 +1,4 @@
-.admin-panel {
+.lecturer-panel {
   display: flex;
   min-height: 100vh;
   background: #fafafa;
@@ -452,7 +452,7 @@
   }
 }
 
-/* Additional CSS for AdminPanel.css */
+/* Additional CSS for LecturerPanel.css */
 
 /* Profile Avatar Section */
 .profile-avatar-section {

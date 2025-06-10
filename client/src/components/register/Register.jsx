@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import './register.css';
 import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn, FaHome } from "react-icons/fa";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function Register() {
   const [isActive, setIsActive] = useState(true);
-  const [registrationStatus, setRegistrationStatus] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleToggleLogin = () => {
     setIsActive(false);
@@ -13,6 +14,7 @@ function Register() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError('');
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData);
     
@@ -29,31 +31,20 @@ function Register() {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        setRegistrationStatus('pending');
+        // Show success message and redirect to login
+        alert('Registration successful! You can now log in.');
+        navigate('/login');
       } else {
-        setRegistrationStatus('error');
+        setError(data.message || 'Registration failed');
         alert(data.message || 'Registration failed');
       }
     })
     .catch(error => {
       console.error('Error:', error);
-      setRegistrationStatus('error');
+      setError('An error occurred during registration');
       alert('An error occurred during registration');
     });
   };
-
-  if (registrationStatus === 'pending') {
-    return (
-      <div className="registration-status-container">
-        <h2>Registration Submitted!</h2>
-        <p>Your registration request has been submitted successfully and is pending admin approval.</p>
-        <p>You will be able to log in once an administrator approves your registration.</p>
-        <Link to="/login" className="back-to-login">
-          <button>Back to Login</button>
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -71,17 +62,16 @@ function Register() {
               <a href="#" className="icon"><FaLinkedinIn /></a>
             </div>
             <span>or use your email for registration</span>
-            <input type="text" name="userCode" placeholder="User Code" required />
             <input type="text" name="name" placeholder="Full Name" required />
             <input type="date" name="DOB" required />
             <select name="role" required>
               <option value="">Select Role</option>
               <option value="Student">Student</option>
               <option value="Lecturer">Lecturer</option>
-              <option value="Admin">Admin</option>
             </select>
-            <input type="text" name="login" placeholder="Email" required />
+            <input type="email" name="login" placeholder="Email" required />
             <input type="password" name="password" placeholder="Password" required />
+            {error && <div className="error-message">{error}</div>}
             <button type="submit">Sign Up</button>
           </form>
         </div>
