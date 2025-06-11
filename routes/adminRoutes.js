@@ -26,21 +26,25 @@ const {
     deleteCourse,
     getCourses,
     getProfile,
-    updateProfile
+    updateProfile,
+    getPendingRegistrations,
+    handleRegistration
 } = require('../controllers/adminController');
-const { isAdmin } = require('../middlewares/authMiddleware');
+
 
 const adminRoutes = express.Router();
 
 adminRoutes.post('/admin-login', collegeLogin);
 adminRoutes.post('/admin-register', collegeRegister);
-adminRoutes.get('/find-active-users', isAdmin, findActiveUsers);
-adminRoutes.post('/logout', isAdmin, adminLogout);
-adminRoutes.post('/add-course', isAdmin, addCourse);
-adminRoutes.put('/edit-course/:courseId', isAdmin, editCourse);
-adminRoutes.delete('/delete-course/:courseId', isAdmin, deleteCourse);
-adminRoutes.get('/courses', isAdmin, getCourses);
-adminRoutes.get('/profile', isAdmin, getProfile);
-adminRoutes.put('/profile', isAdmin, updateProfile);
+adminRoutes.get('/find-active-users',  findActiveUsers);
+adminRoutes.post('/logout',  adminLogout);
+adminRoutes.post('/add-course', addCourse);
+adminRoutes.put('/edit-course/:courseId',  editCourse);
+adminRoutes.delete('/delete-course/:courseId',  deleteCourse);
+adminRoutes.get('/courses',  getCourses);
+adminRoutes.get('/profile',  getProfile);
+adminRoutes.put('/profile',  updateProfile);
+adminRoutes.get('/pending-registrations', getPendingRegistrations);
+adminRoutes.post('/handle-registration', handleRegistration);
 
 module.exports = adminRoutes;

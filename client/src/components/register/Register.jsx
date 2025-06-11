@@ -6,44 +6,72 @@ import { Link, useNavigate } from 'react-router-dom';
 function Register() {
   const [isActive, setIsActive] = useState(true);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleToggleLogin = () => {
     setIsActive(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData);
+    const rawData = Object.fromEntries(formData);
     
-    // Send the data to the backend
-    fetch('http://localhost:5000/api/v1/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      mode: 'cors',
-      body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        // Show success message and redirect to login
-        alert('Registration successful! You can now log in.');
+    try {
+      // Generate a unique user code based on role
+      const rolePrefix = rawData.role === 'Lecturer' ? 'LEC' : 'STU';
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      const userCode = `${rolePrefix}${randomNum}`;
+
+      // Format data according to the schema
+      const formattedData = {
+        UserCode: userCode,
+        Name: rawData.name,
+        Role: rawData.role,
+        DOB: rawData.DOB,
+        Login: rawData.login,
+        Password: rawData.password,
+        Status: 'pending'
+      };
+
+      // Different endpoints for lecturer and student registrations
+      const endpoint = rawData.role === 'Lecturer' 
+        ? 'http://localhost:5000/api/v1/pending-registration'
+        : 'http://localhost:5000/api/v1/register';
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        mode: 'cors',
+        body: JSON.stringify(formattedData)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        if (rawData.role === 'Lecturer') {
+          alert('Registration submitted successfully! Please wait for admin approval.');
+        } else {
+          alert('Registration successful! You can now log in.');
+        }
         navigate('/login');
       } else {
-        setError(data.message || 'Registration failed');
-        alert(data.message || 'Registration failed');
+        setError(result.message || 'Registration failed');
+        alert(result.message || 'Registration failed');
       }
-    })
-    .catch(error => {
+    } catch (error) {
       console.error('Error:', error);
       setError('An error occurred during registration');
       alert('An error occurred during registration');
-    });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -72,7 +100,9 @@ function Register() {
             <input type="email" name="login" placeholder="Email" required />
             <input type="password" name="password" placeholder="Password" required />
             {error && <div className="error-message">{error}</div>}
-            <button type="submit">Sign Up</button>
+            <button type="submit" disabled={isLoading}>
+              {isLoading ? 'Registering...' : 'Sign Up'}
+            </button>
           </form>
         </div>
         

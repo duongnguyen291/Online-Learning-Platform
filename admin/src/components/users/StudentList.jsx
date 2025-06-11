@@ -23,30 +23,6 @@ const StudentList = () => {
 
   const fetchStudents = async () => {
     try {
-      // Fetch pending registrations
-      const pendingResponse = await fetch('http://localhost:5000/api/v2/pending-registrations', {
-        credentials: 'include'
-      });
-      const pendingData = await pendingResponse.json();
-
-      if (pendingData.success) {
-        const pendingStudents = pendingData.pendingRegistrations
-          .filter(reg => reg.Role.toLowerCase() === 'student')
-          .map(reg => ({
-            id: reg._id,
-            userCode: reg.UserCode,
-            name: reg.Name,
-            role: reg.Role,
-            login: reg.Login,
-            dob: reg.DOB,
-            status: 'pending'
-          }));
-
-        setStudents(prev => ({
-          ...prev,
-          pending: pendingStudents
-        }));
-      }
 
       // Fetch active students
       const activeResponse = await fetch('http://localhost:5000/api/v2/find-active-users', {
@@ -82,59 +58,6 @@ const StudentList = () => {
     }
   };
 
-  const handleApprove = async (student) => {
-    try {
-      const response = await fetch('http://localhost:5000/api/v2/handle-registration', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          registrationId: student.id,
-          action: 'approve'
-        })
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        message.success(`Đã duyệt học viên ${student.name}`);
-        fetchStudents();
-      } else {
-        message.error('Không thể duyệt học viên');
-      }
-    } catch (error) {
-      message.error('Đã xảy ra lỗi khi duyệt học viên');
-    }
-  };
-
-  const handleReject = async (student) => {
-    try {
-      const response = await fetch('http://localhost:5000/api/v2/handle-registration', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          registrationId: student.id,
-          action: 'reject'
-        })
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        message.success(`Đã từ chối học viên ${student.name}`);
-        fetchStudents();
-      } else {
-        message.error('Không thể từ chối học viên');
-      }
-    } catch (error) {
-      message.error('Đã xảy ra lỗi khi từ chối học viên');
-    }
-  };
 
   const handleDelete = async (student) => {
     try {

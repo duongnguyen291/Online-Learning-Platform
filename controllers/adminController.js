@@ -19,6 +19,7 @@ const fs = require('fs');
 const Admin = require('../models/adminModel');
 const User = require('../models/userModel');
 const Course = require('../models/courseModel');
+const PendingRegistration = require('../models/pendingRegistratioModel');
 
 const collegeRegister = async(req,res)=>{
     const {Name, Login, DOB, Password, Role}=req.body;
@@ -374,6 +375,79 @@ const updateProfile = async (req, res) => {
     }
 };
 
+const getPendingRegistrations = async (req, res) => {
+    try {
+        const pendingRegistrations = await PendingRegistration.find({ Status: 'pending' });
+        return res.status(200).json({
+            success: true,
+            pendingRegistrations
+        });
+    } catch (error) {
+        console.error('Error fetching pending registrations:', error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+};
+
+const handleRegistration = async (req, res) => {
+    const { registrationId, action } = req.body;
+
+    try {
+        const registration = await PendingRegistration.findById(registrationId);
+        if (!registration) {
+            return res.status(404).json({
+                success: false,
+                message: "Registration not found"
+            });
+        }
+
+        if (action === 'approve') {
+            // Create new user from pending registration
+            const newUser = await User.create({
+                UserCode: registration.UserCode,
+                Name: registration.Name,
+                Role: registration.Role,
+                DOB: registration.DOB,
+                Login: registration.Login,
+                Password: registration.Password,
+                Status: 'active'
+            });
+
+            // Update registration status
+            registration.Status = 'approved';
+            await registration.save();
+
+            return res.status(200).json({
+                success: true,
+                message: "Registration approved successfully",
+                user: newUser
+            });
+        } else if (action === 'reject') {
+            // Update registration status to rejected
+            registration.Status = 'rejected';
+            await registration.save();
+
+            return res.status(200).json({
+                success: true,
+                message: "Registration rejected successfully"
+            });
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid action"
+            });
+        }
+    } catch (error) {
+        console.error('Error handling registration:', error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+};
+
 module.exports = {
     collegeRegister,
     collegeLogin,
@@ -384,5 +458,7 @@ module.exports = {
     deleteCourse,
     getCourses,
     getProfile,
-    updateProfile
+    updateProfile,
+    getPendingRegistrations,
+    handleRegistration
 };

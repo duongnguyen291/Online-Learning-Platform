@@ -18,6 +18,7 @@ limitations under the License.
 const User = require("../models/userModel");
 const Course = require("../models/courseModel");
 const Enrollment = require("../models/enrollmentModel");
+const PendingRegistration = require("../models/pendingRegistratioModel");
 
 const register = async (req, res) => {
   const { userCode, name, role, DOB, login, password } = req.body;
@@ -212,5 +213,66 @@ const getProfile = async (req, res) => {
   }
 };
 
+const pendingRegistration = async (req, res) => {
+  const { UserCode, Name, Role, DOB, Login, Password } = req.body;
+  
+  try {
+    // Validate role is Lecturer
+    if (Role !== 'Lecturer') {
+      return res.status(400).json({
+        success: false,
+        message: "Only Lecturer registrations can be pending. Students can register directly."
+      });
+    }
 
-module.exports = { register, loginUser, logoutUser, getCourses, getProfile};
+    // Check if user already exists in Users collection
+    const existingUser = await User.findOne({ Login });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists",
+      });
+    }
+
+    // Check if there's already a pending registration
+    const existingPending = await PendingRegistration.findOne({ Login });
+    if (existingPending) {
+      return res.status(400).json({
+        success: false,
+        message: "A registration request for this email is already pending",
+      });
+    }
+
+    // Create pending registration
+    const pendingReg = await PendingRegistration.create({
+      UserCode,
+      Name,
+      Role,
+      DOB,
+      Login,
+      Password,
+      Status: 'pending'
+    });
+
+    return res.status(201).json({
+      success: true,
+      pendingRegistration: pendingReg,
+      message: "Registration request submitted successfully. Please wait for admin approval.",
+    });
+  } catch (error) {
+    console.error("Pending registration error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+module.exports = { 
+  register, 
+  loginUser, 
+  logoutUser, 
+  getCourses, 
+  getProfile,
+  pendingRegistration
+};

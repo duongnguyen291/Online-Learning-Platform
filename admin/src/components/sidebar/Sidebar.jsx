@@ -57,32 +57,17 @@ const Sidebar = () => {
   const handleLogoutClick = async (item) => {
     if (item.key === '/logout') {
       try {
-        // Handle logout logic here
-        const response = await fetch('http://localhost:5000/api/v2/admin-logout', {
-          method: 'POST',
-          credentials: 'include',
-        });
-        
-        const result = await response.json();
         
         // Clear admin data from localStorage
         localStorage.removeItem('adminInfo');
-        // Also clear user data to ensure navbar shows login/logout options
-        localStorage.removeItem('userInfo');
-        
-        if (result.success) {
-          // Redirect to landing page
-          window.location.href = 'http://localhost:3000';
-        } else {
-          alert(result.message || 'Logout failed');
-        }
+
+        window.location.href = 'http://localhost:3000';
       } catch (error) {
         console.error('Logout error:', error);
         alert('Logout failed. Please try again.');
         
         // Still clear localStorage and redirect even if there's an error
         localStorage.removeItem('adminInfo');
-        localStorage.removeItem('userInfo');
         window.location.href = 'http://localhost:3000';
       }
     }

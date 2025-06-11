@@ -16,17 +16,25 @@ limitations under the License.
 */
 
 const express = require('express');
-const {register,loginUser, logoutUser, getCourses, getProfile}=require('../controllers/userController');
+const {
+  register,
+  loginUser, 
+  logoutUser, 
+  getCourses, 
+  getProfile,
+  pendingRegistration
+} = require('../controllers/userController');
 const { isStudent, isLecturer } = require('../middlewares/authMiddleware');
 const userRouter = express.Router();
 
-userRouter.post('/register',register);
-userRouter.post('/login',loginUser);
-userRouter.post('/logout',logoutUser);
+userRouter.post('/register', register);
+userRouter.post('/login', loginUser);
+userRouter.post('/logout', logoutUser);
+userRouter.post('/pending-registration', pendingRegistration);
 userRouter.get('/my-courses', isStudent, getCourses);
 userRouter.get('/profile', isStudent, getProfile);
 
 // Lecturer routes - could be moved to a separate router if needed
 userRouter.get('/lecturer/profile', isLecturer, getProfile);
 
-module.exports=userRouter;
+module.exports = userRouter;
