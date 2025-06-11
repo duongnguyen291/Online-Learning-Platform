@@ -29,8 +29,8 @@ const Navbar = () => {
         credentials: 'include',
       });
 
-      // Always clear localStorage, regardless of server response
-      localStorage.removeItem('userInfo');
+      // Always clear all localStorage data, regardless of server response
+      localStorage.clear();
       setIsLoggedIn(false);
       setUserName('');
       setUserLogin('');
@@ -42,7 +42,7 @@ const Navbar = () => {
     } catch (error) {
       console.error('Logout failed:', error);
       // Still clear localStorage even if server request fails
-      localStorage.removeItem('userInfo');
+      localStorage.clear();
       setIsLoggedIn(false);
       navigate('/');
     }

@@ -1,11 +1,15 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Body
 from typing import Dict, Any
 import shutil
 import os
 from tempfile import NamedTemporaryFile
 from services.ragService import rag_service
 
-router = APIRouter(prefix="/api/rag")
+router = APIRouter(
+    prefix="/api/rag",
+    tags=["rag"],
+    responses={404: {"description": "Not found"}},
+)
 
 @router.post("/upload")
 async def upload_document(file: UploadFile = File(...)) -> Dict[str, Any]:
@@ -29,22 +33,34 @@ async def upload_document(file: UploadFile = File(...)) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/query")
-async def query(request: Dict[str, Any]) -> Dict[str, Any]:
+async def query(request: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
     try:
+        print("Received query request:", request)
+        
         if "message" not in request:
             raise HTTPException(status_code=400, detail="Message is required")
             
         result = await rag_service.query(
             question=request["message"],
-            context=request.get("context")
+            context=request.get("context", {})
         )
+        
+        print("RAG service response:", result)
         
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
             
         return result
+    except HTTPException as he:
+        print(f"HTTP error in query endpoint: {str(he)}")
+        raise he
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error in query endpoint: {str(e)}")
+        print(f"Request data: {request}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
+        )
 
 @router.get("/context")
 async def get_context(query: str) -> Dict[str, Any]:

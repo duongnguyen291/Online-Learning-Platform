@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './Chatbot.css';
 
-// API functions
-const API_BASE_URL = 'http://localhost:8000';
+// API configuration
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
 
 const uploadDocument = async (file) => {
   const formData = new FormData();
@@ -22,23 +24,46 @@ const uploadDocument = async (file) => {
 };
 
 const queryRAG = async (message, context = null) => {
-  const response = await fetch(`${API_BASE_URL}/api/rag/query`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
+  try {
+    const endpoint = `${API_BASE_URL}/api/rag/query`;
+    console.log('Sending RAG query to:', endpoint);
+    
+    const payload = {
       message,
-      context,
-    }),
-  });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || 'Failed to get answer');
+      context: context || {}
+    };
+    console.log('Request payload:', payload);
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      let errorMessage;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || 'Unknown error occurred';
+      } catch (e) {
+        errorMessage = await response.text() || response.statusText;
+      }
+      throw new Error(`RAG query failed: ${errorMessage}`);
+    }
+
+    const data = await response.json();
+    console.log('Response data:', data);
+    return data;
+  } catch (error) {
+    console.error('Error in queryRAG:', error);
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối và thử lại.');
+    }
+    throw error;
   }
-  
-  return response.json();
 };
 
 const getContext = async (query) => {
@@ -58,29 +83,55 @@ const getContext = async (query) => {
   return response.json();
 };
 
-const LEARNING_PATH_KEYWORDS = [
-    'recommend', 'suggestion', 'learning path', 'what should i learn',
-    'what next', 'course recommendation', 'study plan', 'learning plan'
-];
-
 const SUGGESTIONS = [
+  {
+    text: "Đưa ra lời khuyên",
+    value: "Bạn có thể đưa ra lời khuyên cho tôi về cách học tập hiệu quả không?"
+},
     {
         text: "Gợi ý khóa học phù hợp",
         value: "Bạn có thể gợi ý cho tôi những khóa học phù hợp với trình độ hiện tại của tôi không?"
     },
     {
-        text: "Lộ trình học tập",
-        value: "Tôi muốn biết lộ trình học tập tiếp theo của mình nên như thế nào?"
+        text: "Hỏi về khóa học",
+        value: "Bạn có thể cho tôi biết thêm thông tin về các khóa học hiện có không?"
     },
     {
-        text: "Khóa học đang học",
-        value: "Cho tôi xem tiến độ các khóa học tôi đang theo học"
+        text: "Tìm kiếm theo chủ đề",
+        value: "Tôi muốn tìm các khóa học liên quan đến một chủ đề cụ thể"
     },
     {
-        text: "Kỹ năng đã học",
-        value: "Tôi đã học được những kỹ năng gì từ các khóa học đã hoàn thành?"
+        text: "Hỗ trợ học tập",
+        value: "Bạn có thể giúp tôi với các câu hỏi về nội dung học tập không?"
     }
 ];
+
+const formatCourseRecommendations = (courses) => {
+  if (!courses || courses.length === 0) {
+    return "Không tìm thấy khóa học phù hợp.";
+  }
+
+  let formattedText = "Dựa trên trình độ và sở thích học tập của bạn, đây là những khóa học được đề xuất:\n\n";
+  
+  courses.forEach((course, index) => {
+    formattedText += `${index + 1}. ${course.Name}\n`;
+    formattedText += `   - Cấp độ: ${course.level || 'Beginner'}\n`;
+    formattedText += `   - Danh mục: ${course.category}\n`;
+    if (course.Description) {
+      formattedText += `   - Mô tả: ${course.Description.substring(0, 100)}...\n`;
+    }
+    formattedText += `   - Thời lượng: ${course.totalLength || '0h 0m'}\n`;
+    formattedText += `   - Giá: $${course.discountedPrice} (Giảm từ $${course.originalPrice})\n`;
+    if (course.rating) {
+      formattedText += `   - Đánh giá: ${course.rating}/5 (${course.reviews || 0} lượt đánh giá)\n`;
+    }
+    formattedText += '\n';
+  });
+
+  formattedText += "Bạn có thể chọn một trong những khóa học trên để bắt đầu. Bạn cần tôi giải thích thêm về khóa học nào không?";
+  
+  return formattedText;
+};
 
 const Chatbot = () => {
   const [messages, setMessages] = useState([]);
@@ -92,7 +143,7 @@ const Chatbot = () => {
     { id: 'default', name: 'New conversation', messages: [] }
   ]);
   const [activeConversation, setActiveConversation] = useState('default');
-  const [userId, setUserId] = useState(null);
+  const [userCode, setUserCode] = useState(null);
   
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -119,36 +170,56 @@ const Chatbot = () => {
   }, [activeConversation, conversations]);
 
   useEffect(() => {
-    // Get user ID from localStorage or context
-    const currentUserId = localStorage.getItem('userId');
-    if (currentUserId) {
-      setUserId(currentUserId);
+    // Get user code from userInfo in localStorage
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      try {
+        const parsedUserInfo = JSON.parse(userInfo);
+        if (parsedUserInfo.userId) {
+          console.log("Setting userCode:", parsedUserInfo.userId);
+          setUserCode(parsedUserInfo.userId);
+        } else {
+          console.error("No userId found in userInfo:", parsedUserInfo);
+          // Add initial message when user code is not found
+          setMessages([{
+            id: 'initial-message',
+            text: 'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.',
+            isUser: false,
+            timestamp: new Date()
+          }]);
+          // Clear localStorage and redirect to login
+          localStorage.clear();
+          window.location.href = '/login';
+        }
+      } catch (error) {
+        console.error("Error parsing userInfo:", error);
+        localStorage.clear();
+        window.location.href = '/login';
+      }
+    } else {
+      console.log("No userInfo found in localStorage");
+      // Add initial message when user is not logged in
+      setMessages([{
+        id: 'initial-message',
+        text: 'Vui lòng đăng nhập để sử dụng đầy đủ các tính năng của chatbot.',
+        isUser: false,
+        timestamp: new Date()
+      }]);
+      // Redirect to login
+      window.location.href = '/login';
     }
   }, []);
 
-  const checkForLearningPathRequest = (message) => {
-    return LEARNING_PATH_KEYWORDS.some(keyword => 
-      message.toLowerCase().includes(keyword.toLowerCase())
-    );
-  };
-
-  const getLearningPathAdvice = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/learning-path/advice/${userId}`);
-      const data = await response.json();
-      if (data.status === 'success') {
-        return data.advice;
-      }
-      throw new Error(data.message || 'Failed to get learning path advice');
-    } catch (error) {
-      console.error('Error getting learning path advice:', error);
-      return 'Sorry, I could not generate learning path recommendations at this time.';
-    }
-  };
-
   const handleUserMessage = async (message) => {
     try {
-      // Add user message
+      // Validate userCode before making request
+      if (!userCode) {
+        console.error("No userCode available");
+        throw new Error('Vui lòng đăng nhập lại để tiếp tục.');
+      }
+      console.log("Using userCode for request:", userCode);
+
+      // Create user message object
       const userMessageObj = {
         id: `user-${Date.now()}`,
         text: message,
@@ -159,28 +230,73 @@ const Chatbot = () => {
       setIsLoading(true);
 
       let response;
-      if (checkForLearningPathRequest(message)) {
-        // Get personalized learning path advice
-        const apiResponse = await fetch(`${API_BASE_URL}/learning-path/advice/${userId}`);
+      // Check message type based on SUGGESTIONS
+      const isAdviceRequest = message === SUGGESTIONS[0].value;
+      const isCourseRecommendation = message === SUGGESTIONS[1].value;
+      
+      if (isAdviceRequest) {
+        // Call learning path advice endpoint
+        console.log("Making learning path advice request for userCode:", userCode);
+        const apiResponse = await fetch(`${API_BASE_URL}/learning-path/advice/${userCode}`);
+        if (!apiResponse.ok) {
+          const errorData = await apiResponse.json();
+          throw new Error(errorData.detail || 'Failed to get learning path advice');
+        }
         const data = await apiResponse.json();
         if (data.status === 'success') {
           response = data.advice;
         } else {
           throw new Error(data.message || 'Failed to get learning path advice');
         }
+      } else if (isCourseRecommendation) {
+        // Call course recommendations endpoint
+        console.log("Making course recommendation request for userCode:", userCode);
+        const apiResponse = await fetch(`${API_BASE_URL}/learning-path/recommendations/${userCode}`);
+        if (!apiResponse.ok) {
+          const errorData = await apiResponse.json();
+          throw new Error(errorData.detail || 'Failed to get course recommendations');
+        }
+        const data = await apiResponse.json();
+        if (data.status === 'success') {
+          response = formatCourseRecommendations(data.courses);
+        } else {
+          throw new Error(data.message || 'Failed to get course recommendations');
+        }
       } else {
-        // Use existing RAG-based response
-        const ragResponse = await fetch(`${API_BASE_URL}/rag/query`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            question: message,
-            context: { chat_history: messages }
-          })
+        // For all other queries, use RAG-based response
+        console.log('Sending RAG query:', {
+          message,
+          context: { 
+            chat_history: messages.map(msg => ({
+              role: msg.isUser ? "user" : "assistant",
+              content: msg.text
+            }))
+          }
         });
+
+        const ragResponse = await queryRAG(message, { 
+          chat_history: messages.map(msg => ({
+            role: msg.isUser ? "user" : "assistant",
+            content: msg.text
+          }))
+        });
+
+        console.log('RAG response status:', ragResponse.status);
+        
+        if (!ragResponse.ok) {
+          const errorData = await ragResponse.text();
+          console.error('RAG error response:', errorData);
+          throw new Error(`Failed to get response from RAG service: ${errorData}`);
+        }
+
         const data = await ragResponse.json();
+        console.log('RAG response data:', data);
+        
         if (data.status === 'success') {
           response = data.answer;
+          if (data.has_context) {
+            response += "\n\n(Câu trả lời này được tham khảo từ tài liệu đã được tải lên)";
+          }
         } else {
           throw new Error(data.message || 'Failed to get response');
         }
@@ -567,7 +683,26 @@ const Chatbot = () => {
                     </span>
                   </div>
                   <div className="message-text">
-                    {message.text}
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        // Override default components to maintain styling
+                        h1: ({node, ...props}) => <h1 className="markdown-h1" {...props} />,
+                        h2: ({node, ...props}) => <h2 className="markdown-h2" {...props} />,
+                        h3: ({node, ...props}) => <h3 className="markdown-h3" {...props} />,
+                        h4: ({node, ...props}) => <h4 className="markdown-h4" {...props} />,
+                        p: ({node, ...props}) => <p className="markdown-p" {...props} />,
+                        ul: ({node, ...props}) => <ul className="markdown-ul" {...props} />,
+                        ol: ({node, ...props}) => <ol className="markdown-ol" {...props} />,
+                        li: ({node, ...props}) => <li className="markdown-li" {...props} />,
+                        strong: ({node, ...props}) => <strong className="markdown-strong" {...props} />,
+                        em: ({node, ...props}) => <em className="markdown-em" {...props} />,
+                        code: ({node, ...props}) => <code className="markdown-code" {...props} />,
+                        blockquote: ({node, ...props}) => <blockquote className="markdown-blockquote" {...props} />
+                      }}
+                    >
+                      {message.text}
+                    </ReactMarkdown>
                     {message.image && (
                       <div className="message-image-container">
                         <img 

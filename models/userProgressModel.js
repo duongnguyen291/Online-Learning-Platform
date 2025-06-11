@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
 const userProgressSchema = new mongoose.Schema({
-    userId: {
+    userCode: {
         type: String,
         ref: 'User',
         required: true
     },
-    courseId: {
+    courseCode: {
         type: String,
         ref: 'Course',
         required: true
@@ -35,7 +35,7 @@ const userProgressSchema = new mongoose.Schema({
 }, { timestamps: true, versionKey: false });
 
 // Compound index for efficient queries
-userProgressSchema.index({ userId: 1, courseId: 1 }, { unique: true });
+userProgressSchema.index({ userCode: 1, courseCode: 1 }, { unique: true });
 
 const UserProgress = mongoose.model("UserProgress", userProgressSchema, 'UserProgress');
 module.exports = UserProgress; 

@@ -51,6 +51,8 @@ function LoginForm() {
           }
           
           // Store user info in localStorage
+          // Clear any existing user data first
+          localStorage.clear();  // Clear all stored data
           localStorage.setItem('userInfo', JSON.stringify({
             isLoggedIn: true,
             login: result.user.login,
