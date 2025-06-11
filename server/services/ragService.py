@@ -32,6 +32,29 @@ class RAGService:
             if not self.api_key:
                 raise ValueError("OPENAI_API_KEY not found in environment")
             
+            # Define system prompt
+            self.system_prompt = """Bạn là trợ lý AI của hệ thống học liệu EduSmart. Nhiệm vụ của bạn bao gồm:
+
+1. Giải đáp thắc mắc: Trả lời mọi câu hỏi liên quan đến nội dung học tập, khóa học và hệ thống.
+2. Tư vấn học tập: Đưa ra những lời khuyên phù hợp với trình độ và mục tiêu của người học.
+3. Xây dựng lộ trình: Giúp người học lập kế hoạch và lộ trình học tập hiệu quả.
+4. Hỗ trợ toàn diện: Giải quyết mọi vấn đề người học gặp phải trong quá trình học tập.
+5. Phân tích tài liệu: Khi được cung cấp tài liệu học tập, bạn sẽ phân tích và trả lời các câu hỏi dựa trên nội dung đó.
+
+Hãy luôn:
+- Trả lời bằng tiếng Việt, rõ ràng và dễ hiểu
+- Thể hiện sự thân thiện và hỗ trợ
+- Đưa ra những gợi ý và lời khuyên mang tính xây dựng
+- Khuyến khích người học phát triển
+- Sử dụng kiến thức từ tài liệu đã được tải lên khi có thể
+- Thừa nhận khi không chắc chắn về một thông tin
+
+Khi trả lời, hãy:
+1. Phân tích câu hỏi/yêu cầu của người học
+2. Đưa ra câu trả lời có cấu trúc rõ ràng
+3. Cung cấp ví dụ hoặc giải thích cụ thể nếu cần
+4. Gợi ý các bước tiếp theo hoặc tài nguyên bổ sung nếu phù hợp"""
+
             print("Initializing OpenAI embeddings...")
             self.embeddings = OpenAIEmbeddings(
                 openai_api_key=self.api_key,
@@ -175,17 +198,17 @@ class RAGService:
             print(f"Processing query: {question}")
             print(f"Context: {context}")
 
-            # Format the question
-            formatted_question = f"""Hãy trả lời câu hỏi sau đây bằng tiếng Việt một cách chi tiết và dễ hiểu:
+            # Format the question with system prompt
+            formatted_question = f"""{self.system_prompt}
 
-            Câu hỏi: {question}
+Câu hỏi: {question}
 
-            Yêu cầu:
-            1. Trả lời bằng tiếng Việt, rõ ràng và dễ hiểu
-            2. Nếu có thông tin liên quan trong tài liệu đã tải lên, hãy sử dụng để làm phong phú câu trả lời
-            3. Nếu không có thông tin liên quan, hãy trả lời dựa trên kiến thức của bạn
-            4. Trình bày câu trả lời có cấu trúc, dễ đọc
-            5. Nếu cần thiết, đưa ra ví dụ minh họa"""
+Yêu cầu:
+1. Trả lời dựa trên vai trò của bạn như đã định nghĩa ở trên
+2. Sử dụng thông tin từ tài liệu đã tải lên nếu có
+3. Nếu không có thông tin liên quan, hãy trả lời dựa trên kiến thức của bạn
+4. Trình bày câu trả lời có cấu trúc, dễ đọc
+5. Nếu cần thiết, đưa ra ví dụ minh họa"""
 
             # Process chat history
             chat_history = []
@@ -193,6 +216,7 @@ class RAGService:
                 chat_history = [
                     {"role": msg["role"], "content": msg["content"]}
                     for msg in context["chat_history"]
+                    if msg.get("content")  # Only include messages with content
                 ]
 
             # Try direct LLM first for quick response

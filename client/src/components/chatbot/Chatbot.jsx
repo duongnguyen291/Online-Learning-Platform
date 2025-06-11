@@ -7,20 +7,33 @@ import './Chatbot.css';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
 
 const uploadDocument = async (file) => {
-  const formData = new FormData();
-  formData.append('file', file);
-  
-  const response = await fetch(`${API_BASE_URL}/api/rag/upload`, {
-    method: 'POST',
-    body: formData,
-  });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || 'Failed to upload document');
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await fetch(`${API_BASE_URL}/api/rag/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to upload document');
+    }
+    
+    const result = await response.json();
+    return {
+      status: 'success',
+      message: `Tài liệu "${file.name}" đã được tải lên thành công. Bạn có thể hỏi các câu hỏi về nội dung tài liệu.`,
+      ...result
+    };
+  } catch (error) {
+    console.error('Error uploading document:', error);
+    return {
+      status: 'error',
+      message: `Lỗi khi tải lên tài liệu: ${error.message}`
+    };
   }
-  
-  return response.json();
 };
 
 const queryRAG = async (message, context = null) => {
@@ -133,6 +146,52 @@ const formatCourseRecommendations = (courses) => {
   return formattedText;
 };
 
+const Message = ({ message, onSourceClick }) => {
+  const [showSources, setShowSources] = useState(false);
+
+  const toggleSources = () => {
+    setShowSources(!showSources);
+  };
+
+  return (
+    <div className={`message ${message.isUser ? 'user' : 'ai'}`}>
+      <div className="message-content">
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {message.text}
+        </ReactMarkdown>
+        {message.sources && message.sources.length > 0 && (
+          <div className="message-sources">
+            <button 
+              className="source-toggle-btn"
+              onClick={toggleSources}
+            >
+              {showSources ? 'Ẩn nguồn tài liệu' : 'Xem nguồn tài liệu'}
+            </button>
+            {showSources && (
+              <div className="source-list">
+                {message.sources.map((source, index) => (
+                  <div key={index} className="source-item">
+                    <h4>Trích dẫn {index + 1}:</h4>
+                    <p>{source.content}</p>
+                    {source.metadata && source.metadata.source && (
+                      <p className="source-metadata">
+                        Nguồn: {source.metadata.source}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="message-timestamp">
+        {message.timestamp.toLocaleTimeString()}
+      </div>
+    </div>
+  );
+};
+
 const Chatbot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -230,6 +289,8 @@ const Chatbot = () => {
       setIsLoading(true);
 
       let response;
+      let sources = [];
+      let hasContext = false;
       // Check message type based on SUGGESTIONS
       const isAdviceRequest = message === SUGGESTIONS[0].value;
       const isCourseRecommendation = message === SUGGESTIONS[1].value;
@@ -267,45 +328,40 @@ const Chatbot = () => {
         console.log('Sending RAG query:', {
           message,
           context: { 
-            chat_history: messages.map(msg => ({
-              role: msg.isUser ? "user" : "assistant",
-              content: msg.text
-            }))
+            chat_history: messages
+              .filter(msg => msg.text && msg.text.trim() !== '')
+              .map(msg => ({
+                role: msg.isUser ? "user" : "assistant",
+                content: msg.text
+              }))
           }
         });
 
         const ragResponse = await queryRAG(message, { 
-          chat_history: messages.map(msg => ({
-            role: msg.isUser ? "user" : "assistant",
-            content: msg.text
-          }))
+          chat_history: messages
+            .filter(msg => msg.text && msg.text.trim() !== '')
+            .map(msg => ({
+              role: msg.isUser ? "user" : "assistant",
+              content: msg.text
+            }))
         });
 
-        console.log('RAG response status:', ragResponse.status);
+        console.log('RAG response:', ragResponse);
         
-        if (!ragResponse.ok) {
-          const errorData = await ragResponse.text();
-          console.error('RAG error response:', errorData);
-          throw new Error(`Failed to get response from RAG service: ${errorData}`);
-        }
-
-        const data = await ragResponse.json();
-        console.log('RAG response data:', data);
-        
-        if (data.status === 'success') {
-          response = data.answer;
-          if (data.has_context) {
-            response += "\n\n(Câu trả lời này được tham khảo từ tài liệu đã được tải lên)";
-          }
+        if (ragResponse.status === 'success') {
+          response = ragResponse.answer;
+          sources = ragResponse.sources || [];
+          hasContext = ragResponse.has_context;
         } else {
-          throw new Error(data.message || 'Failed to get response');
+          throw new Error(ragResponse.message || 'Failed to get response');
         }
       }
 
       // Add AI response
       const aiMessageObj = {
         id: `ai-${Date.now()}`,
-        text: response,
+        text: response + (hasContext ? "\n\n(Câu trả lời này được tham khảo từ tài liệu đã được tải lên)" : ""),
+        sources: sources,
         isUser: false,
         timestamp: new Date()
       };
@@ -425,89 +481,38 @@ const Chatbot = () => {
     if (file) {
       try {
         setIsUploading(true);
+        
         // Upload the file
         const result = await uploadDocument(file);
         
+        // Add system message about upload status
+        const systemMessage = {
+          id: Date.now().toString(),
+          text: result.message,
+          isUser: false,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, systemMessage]);
+        
+        // If upload was successful, show preview
         if (result.status === 'success') {
-          // Show preview
           const reader = new FileReader();
           reader.onload = () => {
             setImagePreview(reader.result);
           };
           reader.readAsDataURL(file);
-          
-          // Add system message about successful upload
-          const systemMessage = {
-            id: Date.now().toString(),
-            content: `Successfully uploaded document: ${file.name}. You can now ask questions about it.`,
-            sender: 'ai',
-            timestamp: new Date()
-          };
-          
-          const updatedMessages = [...messages, systemMessage];
-          setMessages(updatedMessages);
-          
-          // Update conversation
-          const updatedConversations = conversations.map(conv => {
-            if (conv.id === activeConversation) {
-              return {
-                ...conv,
-                messages: updatedMessages
-              };
-            }
-            return conv;
-          });
-          
-          setConversations(updatedConversations);
-        } else {
-          // Handle error
-          const errorMessage = {
-            id: Date.now().toString(),
-            content: `Failed to upload document: ${result.message}`,
-            sender: 'ai',
-            timestamp: new Date()
-          };
-          
-          const updatedMessages = [...messages, errorMessage];
-          setMessages(updatedMessages);
-          
-          // Update conversation
-          const updatedConversations = conversations.map(conv => {
-            if (conv.id === activeConversation) {
-              return {
-                ...conv,
-                messages: updatedMessages
-              };
-            }
-            return conv;
-          });
-          
-          setConversations(updatedConversations);
         }
+        
       } catch (error) {
-        // Handle API error
+        console.error('Error handling file upload:', error);
         const errorMessage = {
           id: Date.now().toString(),
-          content: `Error uploading document: ${error.message}`,
-          sender: 'ai',
+          text: `Lỗi khi xử lý tập tin: ${error.message}`,
+          isUser: false,
           timestamp: new Date()
         };
-        
-        const updatedMessages = [...messages, errorMessage];
-        setMessages(updatedMessages);
-        
-        // Update conversation
-        const updatedConversations = conversations.map(conv => {
-          if (conv.id === activeConversation) {
-            return {
-              ...conv,
-              messages: updatedMessages
-            };
-          }
-          return conv;
-        });
-        
-        setConversations(updatedConversations);
+        setMessages(prev => [...prev, errorMessage]);
       } finally {
         setIsUploading(false);
       }
@@ -672,66 +677,7 @@ const Chatbot = () => {
             </div>
           ) : (
             messages.map((message) => (
-              <div 
-                key={message.id} 
-                className={`message ${message.isUser ? 'user-message' : 'ai-message'}`}
-              >
-                <div className="message-content">
-                  <div className="message-header">
-                    <span className="sender-name">
-                      {message.isUser ? 'You' : 'AI Assistant'}
-                    </span>
-                  </div>
-                  <div className="message-text">
-                    <ReactMarkdown 
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        // Override default components to maintain styling
-                        h1: ({node, ...props}) => <h1 className="markdown-h1" {...props} />,
-                        h2: ({node, ...props}) => <h2 className="markdown-h2" {...props} />,
-                        h3: ({node, ...props}) => <h3 className="markdown-h3" {...props} />,
-                        h4: ({node, ...props}) => <h4 className="markdown-h4" {...props} />,
-                        p: ({node, ...props}) => <p className="markdown-p" {...props} />,
-                        ul: ({node, ...props}) => <ul className="markdown-ul" {...props} />,
-                        ol: ({node, ...props}) => <ol className="markdown-ol" {...props} />,
-                        li: ({node, ...props}) => <li className="markdown-li" {...props} />,
-                        strong: ({node, ...props}) => <strong className="markdown-strong" {...props} />,
-                        em: ({node, ...props}) => <em className="markdown-em" {...props} />,
-                        code: ({node, ...props}) => <code className="markdown-code" {...props} />,
-                        blockquote: ({node, ...props}) => <blockquote className="markdown-blockquote" {...props} />
-                      }}
-                    >
-                      {message.text}
-                    </ReactMarkdown>
-                    {message.image && (
-                      <div className="message-image-container">
-                        <img 
-                          src={message.image} 
-                          alt="Uploaded" 
-                          className="message-image" 
-                          onClick={() => window.open(message.image, '_blank')}
-                        />
-                      </div>
-                    )}
-                    {message.sources && message.sources.length > 0 && (
-                      <div className="message-sources">
-                        <h4>Sources:</h4>
-                        {message.sources.map((source, index) => (
-                          <div key={index} className="source-item">
-                            <p>{source.content}</p>
-                            {source.metadata && (
-                              <small>
-                                {source.metadata.source && `Source: ${source.metadata.source}`}
-                                {source.metadata.page && `, Page: ${source.metadata.page}`}
-                              </small>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <Message key={message.id} message={message} />
             ))
           )}
           {isLoading && (
@@ -840,5 +786,58 @@ const Chatbot = () => {
     </div>
   );
 };
+
+// Add CSS styles
+const styles = `
+.message-sources {
+  margin-top: 10px;
+}
+
+.source-toggle-btn {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  margin-top: 5px;
+}
+
+.source-toggle-btn:hover {
+  background-color: #357abd;
+}
+
+.source-list {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.source-item {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.source-item h4 {
+  margin: 0 0 5px 0;
+  color: #4a90e2;
+}
+
+.source-metadata {
+  margin-top: 5px;
+  font-size: 0.9em;
+  color: #666;
+}
+`;
+
+// Add style tag to head
+const styleSheet = document.createElement("style");
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
 
 export default Chatbot;
