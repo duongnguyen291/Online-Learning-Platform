@@ -41,19 +41,20 @@ class RAGService:
 4. Hỗ trợ toàn diện: Giải quyết mọi vấn đề người học gặp phải trong quá trình học tập.
 5. Phân tích tài liệu: Khi được cung cấp tài liệu học tập, bạn sẽ phân tích và trả lời các câu hỏi dựa trên nội dung đó.
 
-Hãy luôn:
+Khi trả lời:
+1. Đọc kỹ và phân tích tất cả các tài liệu được cung cấp
+2. Tổng hợp thông tin từ các nguồn một cách chính xác
+3. Trích dẫn thông tin trực tiếp từ tài liệu khi có thể
+4. KHÔNG được phủ nhận thông tin có trong tài liệu
+5. Nếu tài liệu cung cấp thông tin rõ ràng, hãy sử dụng thông tin đó
+6. Thừa nhận và sử dụng thông tin từ tài liệu, ngay cả khi nó khác với kiến thức có sẵn của bạn
+7. Nếu không có thông tin trong tài liệu, hãy nói rõ điều đó
+
+Luôn:
 - Trả lời bằng tiếng Việt, rõ ràng và dễ hiểu
 - Thể hiện sự thân thiện và hỗ trợ
-- Đưa ra những gợi ý và lời khuyên mang tính xây dựng
-- Khuyến khích người học phát triển
-- Sử dụng kiến thức từ tài liệu đã được tải lên khi có thể
-- Thừa nhận khi không chắc chắn về một thông tin
-
-Khi trả lời, hãy:
-1. Phân tích câu hỏi/yêu cầu của người học
-2. Đưa ra câu trả lời có cấu trúc rõ ràng
-3. Cung cấp ví dụ hoặc giải thích cụ thể nếu cần
-4. Gợi ý các bước tiếp theo hoặc tài nguyên bổ sung nếu phù hợp"""
+- Đưa ra thông tin chính xác dựa trên tài liệu
+- Tổ chức câu trả lời có cấu trúc rõ ràng"""
 
             print("Initializing OpenAI embeddings...")
             self.embeddings = OpenAIEmbeddings(
@@ -198,17 +199,20 @@ Khi trả lời, hãy:
             print(f"Processing query: {question}")
             print(f"Context: {context}")
 
-            # Format the question with system prompt
+            # Format the question with system prompt and specific instructions
             formatted_question = f"""{self.system_prompt}
 
 Câu hỏi: {question}
 
-Yêu cầu:
-1. Trả lời dựa trên vai trò của bạn như đã định nghĩa ở trên
-2. Sử dụng thông tin từ tài liệu đã tải lên nếu có
-3. Nếu không có thông tin liên quan, hãy trả lời dựa trên kiến thức của bạn
-4. Trình bày câu trả lời có cấu trúc, dễ đọc
-5. Nếu cần thiết, đưa ra ví dụ minh họa"""
+Hướng dẫn trả lời cụ thể:
+1. Đọc kỹ TẤT CẢ các trích dẫn được cung cấp bên dưới
+2. Nếu trích dẫn có thông tin rõ ràng về chủ đề được hỏi, ưu tiên sử dụng thông tin đó
+3. KHÔNG được nói "không tìm thấy thông tin" nếu thông tin có trong trích dẫn
+4. Tổng hợp thông tin từ tất cả các trích dẫn liên quan
+5. Trả lời một cách đầy đủ và chính xác dựa trên thông tin có sẵn
+
+Trích dẫn từ tài liệu:
+{await self._get_relevant_quotes(question) if self.vector_store else "Không có tài liệu"}"""
 
             # Process chat history
             chat_history = []
@@ -216,21 +220,21 @@ Yêu cầu:
                 chat_history = [
                     {"role": msg["role"], "content": msg["content"]}
                     for msg in context["chat_history"]
-                    if msg.get("content")  # Only include messages with content
+                    if msg.get("content")
                 ]
 
             # Try direct LLM first for quick response
-            print("Using direct LLM for response...")
+            print("Using LLM for response...")
             try:
                 response = await self.llm.ainvoke(formatted_question)
                 answer = response.content
                 print(f"Generated answer: {answer[:100]}...")
                 
-                # Try to get relevant documents in background for future reference
+                # Try to get relevant documents
                 try:
-                    print("Searching for relevant documents in background...")
+                    print("Searching for relevant documents...")
                     relevant_docs = await self._run_in_executor(
-                        functools.partial(self.vector_store.similarity_search, question, k=3)
+                        functools.partial(self.vector_store.similarity_search, question, k=5)  # Increased from 3 to 5
                     )
                     has_relevant_docs = len(relevant_docs) > 0
                     if has_relevant_docs:
@@ -245,7 +249,7 @@ Yêu cầu:
                     else:
                         sources = []
                 except Exception as e:
-                    print(f"Background document search failed: {e}")
+                    print(f"Document search failed: {e}")
                     sources = []
                     has_relevant_docs = False
 
@@ -270,6 +274,24 @@ Yêu cầu:
                 "status": "error",
                 "message": "Đã xảy ra lỗi khi xử lý yêu cầu của bạn. Vui lòng thử lại sau."
             }
+
+    async def _get_relevant_quotes(self, question: str) -> str:
+        """Get relevant quotes from the vector store for the question."""
+        try:
+            docs = await self._run_in_executor(
+                functools.partial(self.vector_store.similarity_search, question, k=5)
+            )
+            if not docs:
+                return "Không tìm thấy trích dẫn liên quan."
+            
+            quotes = []
+            for i, doc in enumerate(docs, 1):
+                quotes.append(f"Trích dẫn {i}:\n{doc.page_content}\n")
+            
+            return "\n".join(quotes)
+        except Exception as e:
+            print(f"Error getting relevant quotes: {e}")
+            return "Lỗi khi tìm trích dẫn."
 
     async def get_relevant_context(self, query: str) -> Dict[str, Any]:
         try:
