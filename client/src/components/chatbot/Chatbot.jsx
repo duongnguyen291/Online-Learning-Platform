@@ -105,18 +105,14 @@ const SUGGESTIONS = [
         text: "Gợi ý khóa học phù hợp",
         value: "Bạn có thể gợi ý cho tôi những khóa học phù hợp với trình độ hiện tại của tôi không?"
     },
-    {
-        text: "Hỏi về khóa học",
-        value: "Bạn có thể cho tôi biết thêm thông tin về các khóa học hiện có không?"
-    },
-    {
-        text: "Tìm kiếm theo chủ đề",
-        value: "Tôi muốn tìm các khóa học liên quan đến một chủ đề cụ thể"
-    },
-    {
-        text: "Hỗ trợ học tập",
-        value: "Bạn có thể giúp tôi với các câu hỏi về nội dung học tập không?"
-    }
+    // {
+    //     text: "Hỏi về khóa học",
+    //     value: "Bạn có thể cho tôi biết thêm thông tin về các khóa học hiện có không?"
+    // },
+    // {
+    //     text: "Tìm kiếm theo chủ đề",
+    //     value: "Tôi muốn tìm các khóa học liên quan đến một chủ đề cụ thể"
+    // },
 ];
 
 const formatCourseRecommendations = (courses) => {
