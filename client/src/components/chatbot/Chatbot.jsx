@@ -2,13 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import './Chatbot.css';
 
 // API functions
-const API_BASE_URL = 'http://localhost:8000/api/rag';
+const API_BASE_URL = 'http://localhost:8000';
 
 const uploadDocument = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
   
-  const response = await fetch(`${API_BASE_URL}/upload`, {
+  const response = await fetch(`${API_BASE_URL}/api/rag/upload`, {
     method: 'POST',
     body: formData,
   });
@@ -22,7 +22,7 @@ const uploadDocument = async (file) => {
 };
 
 const queryRAG = async (message, context = null) => {
-  const response = await fetch(`${API_BASE_URL}/query`, {
+  const response = await fetch(`${API_BASE_URL}/api/rag/query`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -42,7 +42,7 @@ const queryRAG = async (message, context = null) => {
 };
 
 const getContext = async (query) => {
-  const response = await fetch(`${API_BASE_URL}/context`, {
+  const response = await fetch(`${API_BASE_URL}/api/rag/context`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -58,6 +58,30 @@ const getContext = async (query) => {
   return response.json();
 };
 
+const LEARNING_PATH_KEYWORDS = [
+    'recommend', 'suggestion', 'learning path', 'what should i learn',
+    'what next', 'course recommendation', 'study plan', 'learning plan'
+];
+
+const SUGGESTIONS = [
+    {
+        text: "Gợi ý khóa học phù hợp",
+        value: "Bạn có thể gợi ý cho tôi những khóa học phù hợp với trình độ hiện tại của tôi không?"
+    },
+    {
+        text: "Lộ trình học tập",
+        value: "Tôi muốn biết lộ trình học tập tiếp theo của mình nên như thế nào?"
+    },
+    {
+        text: "Khóa học đang học",
+        value: "Cho tôi xem tiến độ các khóa học tôi đang theo học"
+    },
+    {
+        text: "Kỹ năng đã học",
+        value: "Tôi đã học được những kỹ năng gì từ các khóa học đã hoàn thành?"
+    }
+];
+
 const Chatbot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -68,6 +92,7 @@ const Chatbot = () => {
     { id: 'default', name: 'New conversation', messages: [] }
   ]);
   const [activeConversation, setActiveConversation] = useState('default');
+  const [userId, setUserId] = useState(null);
   
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -92,6 +117,98 @@ const Chatbot = () => {
       setMessages(currentConversation.messages);
     }
   }, [activeConversation, conversations]);
+
+  useEffect(() => {
+    // Get user ID from localStorage or context
+    const currentUserId = localStorage.getItem('userId');
+    if (currentUserId) {
+      setUserId(currentUserId);
+    }
+  }, []);
+
+  const checkForLearningPathRequest = (message) => {
+    return LEARNING_PATH_KEYWORDS.some(keyword => 
+      message.toLowerCase().includes(keyword.toLowerCase())
+    );
+  };
+
+  const getLearningPathAdvice = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/learning-path/advice/${userId}`);
+      const data = await response.json();
+      if (data.status === 'success') {
+        return data.advice;
+      }
+      throw new Error(data.message || 'Failed to get learning path advice');
+    } catch (error) {
+      console.error('Error getting learning path advice:', error);
+      return 'Sorry, I could not generate learning path recommendations at this time.';
+    }
+  };
+
+  const handleUserMessage = async (message) => {
+    try {
+      // Add user message
+      const userMessageObj = {
+        id: `user-${Date.now()}`,
+        text: message,
+        isUser: true,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, userMessageObj]);
+      setIsLoading(true);
+
+      let response;
+      if (checkForLearningPathRequest(message)) {
+        // Get personalized learning path advice
+        const apiResponse = await fetch(`${API_BASE_URL}/learning-path/advice/${userId}`);
+        const data = await apiResponse.json();
+        if (data.status === 'success') {
+          response = data.advice;
+        } else {
+          throw new Error(data.message || 'Failed to get learning path advice');
+        }
+      } else {
+        // Use existing RAG-based response
+        const ragResponse = await fetch(`${API_BASE_URL}/rag/query`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            question: message,
+            context: { chat_history: messages }
+          })
+        });
+        const data = await ragResponse.json();
+        if (data.status === 'success') {
+          response = data.answer;
+        } else {
+          throw new Error(data.message || 'Failed to get response');
+        }
+      }
+
+      // Add AI response
+      const aiMessageObj = {
+        id: `ai-${Date.now()}`,
+        text: response,
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, aiMessageObj]);
+
+    } catch (error) {
+      console.error('Error handling message:', error);
+      const errorMessageObj = {
+        id: `error-${Date.now()}`,
+        text: 'Xin lỗi, tôi gặp lỗi khi xử lý yêu cầu của bạn. Vui lòng thử lại sau.',
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessageObj]);
+    } finally {
+      setIsLoading(false);
+      setInput('');
+    }
+  };
 
   const handleCameraCapture = async (e) => {
     const file = e.target.files?.[0];
@@ -283,118 +400,8 @@ const Chatbot = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!input.trim() && !imagePreview) return;
-    
-    // Add user message with image
-    const userMessage = {
-      id: Date.now().toString(),
-      content: input,
-      sender: 'user',
-      timestamp: new Date(),
-      image: imagePreview || undefined
-    };
-    
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    
-    // Update conversation in the list
-    const updatedConversations = conversations.map(conv => {
-      if (conv.id === activeConversation) {
-        return {
-          ...conv,
-          messages: updatedMessages,
-          name: input.trim() ? input.trim().substring(0, 20) + '...' : conv.name
-        };
-      }
-      return conv;
-    });
-    
-    setConversations(updatedConversations);
-    setInput('');
-    setImagePreview(null);
-    setIsLoading(true);
-    
-    try {
-      // Get answer from RAG
-      const result = await queryRAG(input);
-      
-      if (result.status === 'success') {
-        const aiMessage = {
-          id: (Date.now() + 1).toString(),
-          content: result.answer,
-          sender: 'ai',
-          timestamp: new Date(),
-          sources: result.sources
-        };
-        
-        const finalMessages = [...updatedMessages, aiMessage];
-        setMessages(finalMessages);
-        
-        // Update conversation again with AI response
-        const finalConversations = updatedConversations.map(conv => {
-          if (conv.id === activeConversation) {
-            return {
-              ...conv,
-              messages: finalMessages
-            };
-          }
-          return conv;
-        });
-        
-        setConversations(finalConversations);
-      } else {
-        // Handle error
-        const errorMessage = {
-          id: (Date.now() + 1).toString(),
-          content: 'Sorry, I encountered an error while processing your request. Please try again.',
-          sender: 'ai',
-          timestamp: new Date()
-        };
-        
-        const finalMessages = [...updatedMessages, errorMessage];
-        setMessages(finalMessages);
-        
-        // Update conversation with error message
-        const finalConversations = updatedConversations.map(conv => {
-          if (conv.id === activeConversation) {
-            return {
-              ...conv,
-              messages: finalMessages
-            };
-          }
-          return conv;
-        });
-        
-        setConversations(finalConversations);
-      }
-    } catch (error) {
-      // Handle API error
-      const errorMessage = {
-        id: (Date.now() + 1).toString(),
-        content: `Error: ${error.message}`,
-        sender: 'ai',
-        timestamp: new Date()
-      };
-      
-      const finalMessages = [...updatedMessages, errorMessage];
-      setMessages(finalMessages);
-      
-      // Update conversation with error message
-      const finalConversations = updatedConversations.map(conv => {
-        if (conv.id === activeConversation) {
-          return {
-            ...conv,
-            messages: finalMessages
-          };
-        }
-        return conv;
-      });
-      
-      setConversations(finalConversations);
-    } finally {
-      setIsLoading(false);
-    }
+    if (!input.trim()) return;
+    await handleUserMessage(input.trim());
   };
 
   const handleNewChat = () => {
@@ -535,19 +542,32 @@ const Chatbot = () => {
             <div className="welcome-message">
               <h3>Xin chào, tôi có thể giúp gì cho bạn?</h3>
               <p>Hãy hỏi tôi bất cứ điều gì và tôi sẽ cố gắng hết sức để giúp bạn!</p>
+              <div className="suggestion-buttons">
+                {SUGGESTIONS.map((suggestion, index) => (
+                  <button
+                    key={`suggestion-${index}`}
+                    className="suggestion-button"
+                    onClick={() => handleUserMessage(suggestion.value)}
+                  >
+                    {suggestion.text}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             messages.map((message) => (
               <div 
                 key={message.id} 
-                className={`message ${message.sender === 'user' ? 'user-message' : 'ai-message'}`}
+                className={`message ${message.isUser ? 'user-message' : 'ai-message'}`}
               >
                 <div className="message-content">
                   <div className="message-header">
-                    <span className="sender-name">{message.sender === 'user' ? 'You' : 'AI Assistant'}</span>
+                    <span className="sender-name">
+                      {message.isUser ? 'You' : 'AI Assistant'}
+                    </span>
                   </div>
                   <div className="message-text">
-                    {message.content}
+                    {message.text}
                     {message.image && (
                       <div className="message-image-container">
                         <img 
@@ -579,7 +599,7 @@ const Chatbot = () => {
               </div>
             ))
           )}
-          {(isLoading || isUploading) && (
+          {isLoading && (
             <div className="message ai-message">
               <div className="message-content">
                 <div className="message-header">

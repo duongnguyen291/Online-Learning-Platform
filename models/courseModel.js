@@ -76,8 +76,18 @@ const courseSchema = new mongoose.Schema({
     chapters: {
         type: String,
         default: '0',
+    },
+    // Fields for learning path feature
+    skillTags: [{
+        type: String,
+        default: [],
+    }],
+    level: {
+        type: String,
+        enum: ['Beginner', 'Intermediate', 'Advanced'],
+        default: 'Beginner'
     }
-}, {versionKey: false})
+}, { timestamps: true, versionKey: false })
 
 // Add text index for search functionality
 courseSchema.index({ Name: 'text', Description: 'text', category: 'text' });

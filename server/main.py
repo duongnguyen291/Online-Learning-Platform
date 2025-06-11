@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from routes.rag import router as rag_router
+from routes.learning_path import router as learning_path_router
 import os
 from dotenv import load_dotenv
 from services.ragService import rag_service
@@ -30,6 +31,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(rag_router)
+app.include_router(learning_path_router, prefix="/learning-path", tags=["learning-path"])
 
 # Ensure upload directory exists
 UPLOAD_DIR = "./uploads"

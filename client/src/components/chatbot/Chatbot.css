@@ -130,24 +130,22 @@
 
 /* Welcome message styling */
 .welcome-message {
-  background-color: var(--message-ai-bg);
-  border-radius: 10px;
-  padding: 20px;
-  margin: 40px auto;
-  max-width: 600px;
   text-align: center;
-  box-shadow: 0 4px 8px var(--shadow-color);
+  padding: 40px 20px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .welcome-message h3 {
-  color: var(--primary-color);
-  margin-bottom: 10px;
-  font-size: 1.5rem;
+  font-size: 24px;
+  color: #2c3e50;
+  margin-bottom: 16px;
 }
 
 .welcome-message p {
-  color: var(--light-text);
-  font-size: 0.95rem;
+  font-size: 16px;
+  color: #7f8c8d;
+  margin-bottom: 32px;
 }
 
 /* Message styling */
@@ -523,4 +521,56 @@ textarea {
 .source-item small {
   color: #666;
   font-size: 12px;
+}
+
+.welcome-message {
+  text-align: center;
+  padding: 20px;
+  color: #333;
+}
+
+.welcome-message h2 {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+  color: #2c3e50;
+}
+
+.welcome-message p {
+  font-size: 1em;
+  color: #7f8c8d;
+  margin-bottom: 20px;
+}
+
+.suggestion-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.suggestion-button {
+  background-color: #fff;
+  border: 1px solid #3498db;
+  color: #3498db;
+  padding: 12px 24px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.suggestion-button:hover {
+  background-color: #3498db;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.2);
+}
+
+.suggestion-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
 }
