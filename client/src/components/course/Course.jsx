@@ -6,6 +6,7 @@ import { getAllCourses } from '../../services/courseService';
 
 const Course = ({ course }) => {
   const navigate = useNavigate();
+  const defaultImage = "/path/to/default-course-image.jpg"; // Add a default course image path
   
   const handleSeeDetail = (e) => {
     e.stopPropagation();
@@ -20,14 +21,20 @@ const Course = ({ course }) => {
     
     navigate(`/course/${courseCode}`);
   };
+
+  const handleImageError = (e) => {
+    e.target.src = defaultImage;
+  };
   
   return (
     <div className="course-card">
       <div className="course-image-container">
         <img 
-          src={course.image || "/path/to/graduation-cap.png"} 
-          alt={course.title} 
+          src={course.image || defaultImage}
+          alt={course.title}
           className="course-image"
+          onError={handleImageError}
+          loading="lazy"
         />
       </div>
       
@@ -36,10 +43,10 @@ const Course = ({ course }) => {
         
         {course.rating && (
           <div className="course-rating">
-          <div className="stars">
-            {[...Array(5)].map((_, index) => (
+            <div className="stars">
+              {[...Array(5)].map((_, index) => (
                 <span key={index} className={`star ${index < Math.floor(course.rating) ? 'filled' : ''}`}>★</span>
-            ))}
+              ))}
             </div>
             <span className="rating-value">({course.rating})</span>
             <span className="review-count">{course.reviews} reviews</span>
