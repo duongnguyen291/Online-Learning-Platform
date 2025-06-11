@@ -61,6 +61,17 @@
     align-items: center;
     justify-content: center;
   }
+
+  .reason-icon {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+  }
+
+  .reason-icon:hover {
+    transform: scale(1.1);
+  }
   
   .reason-card-content h3 {
     font-size: 24px;
@@ -104,5 +115,10 @@
     
     .reason-card-content {
       min-height: 300px;
+    }
+
+    .reason-icon {
+      width: 70px;
+      height: 70px;
     }
   }

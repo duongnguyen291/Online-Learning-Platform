@@ -20,7 +20,7 @@ import './studentProfile.css';
 const StudentProfile = () => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face');
+  const [avatarUrl, setAvatarUrl] = useState('https://as2.ftcdn.net/v2/jpg/03/31/69/91/1000_F_331699188_lRpvqxO5QRtwOM05gR50ImaaJgBx68vi.jpg');
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [formData, setFormData] = useState({
     userCode: '',

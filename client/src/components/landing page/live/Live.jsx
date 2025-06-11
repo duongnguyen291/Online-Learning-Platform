@@ -1,21 +1,29 @@
 import './live.css';
+import { useNavigate } from 'react-router-dom';
 import onlineClassIcon from "../../../assets/images/sound.jpg"
 import liveChatIcon from "../../../assets/images/live.jpg"
 import recordedClassIcon from "../../../assets/images/video.jpg"
 
 const Live = () => {
+  const navigate = useNavigate();
+
+  const handleTryNow = () => {
+    navigate('/courses');
+  };
+
   return (
     <div className="live-learning-container">
       <div className="live-learning-content">
         <div className="header-section">
           <h1>Interactive Live Learning Experience</h1>
           <p className="description-text">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis et massa eget augue 
-            ornare tincidunt. Nullam at mi tincidunt, malesuada elit vel, porta felis.
+          Ask questions, get instant feedback from chatbot, and experience learning like never before — all from the comfort of your home.
           </p>
           
           <div className="cta-section">
-            <button className="try-now-button">Try now!</button>
+            <button className="try-now-button" onClick={handleTryNow}>
+              Try now!
+            </button>
             <div className="decorative-dots"></div>
           </div>
         </div>
@@ -24,7 +32,7 @@ const Live = () => {
           {/* This is where you would include your embedded video */}
           <div className="video-wrapper">
             <iframe 
-              src="https://youtu.be/5A1_qgKWZ8A" 
+              src="https://www.youtube.com/embed/oV2HDKJ6pos"
               title="Interactive Learning Video"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
               allowFullScreen>
