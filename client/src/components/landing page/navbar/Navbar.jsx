@@ -71,14 +71,14 @@ const Navbar = () => {
 
       <div className="side-nav-items">
         {isLoggedIn ? (
-          <div className="user-avatar-section">
-            <div className="avatar-container" onClick={toggleDropdown}>
+          <div className="nav-user-section">
+            <div className="nav-avatar-container" onClick={toggleDropdown}>
               <img 
-                src="/src/assets/images/avatar.jpg"
+                src="https://as2.ftcdn.net/v2/jpg/03/31/69/91/1000_F_331699188_lRpvqxO5QRtwOM05gR50ImaaJgBx68vi.jpg"
                 alt="User Avatar" 
-                className="user-avatar"
+                className="nav-user-avatar"
               />
-              <span className="user-name">{userName || userLogin}</span>
+              <span className="nav-user-name">{userName || userLogin}</span>
               <svg 
                 className={`dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}
                 width="12" 

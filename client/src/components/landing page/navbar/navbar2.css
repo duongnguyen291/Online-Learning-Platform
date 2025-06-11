@@ -5,13 +5,13 @@
     gap: 50px;
 }
 
-.user-avatar-section {
+.nav-user-section {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-.avatar-container {
+.nav-avatar-container {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -23,20 +23,40 @@
     white-space: nowrap; /* Giữ tên trên cùng một hàng */
 }
 
-.avatar-container:hover {
+.nav-avatar-container:hover {
     background-color: #f5f5f5;
 }
 
-.user-avatar {
+.nav-user-avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
     object-fit: cover;
-    border: none; /* Bỏ viền */
-    flex-shrink: 0; /* Không cho ảnh bị co lại */
+    border: 2px solid #e0e0e0; /* Vành tròn màu xám nhẹ */
+    flex-shrink: 0;
+    aspect-ratio: 1;
+    background-color: #ffffff; /* Nền trắng cho avatar holder */
+    padding: 2px; /* Tạo khoảng cách giữa vành và hình ảnh */
 }
 
-.user-name {
+/* Placeholder cho avatar khi không có hình */
+.nav-user-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #ffffff; /* Nền trắng */
+    border: 2px solid #e0e0e0; /* Vành tròn */
+    flex-shrink: 0;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.nav-user-name {
     font-size: 16px;
     font-weight: 500;
     color: #333;
@@ -157,7 +177,7 @@
         font-size: 14px;
     }
     
-    .user-name {
+    .nav-user-name {
         display: none;
     }
 }
@@ -169,7 +189,7 @@
         padding: 10px;
     }
     
-    .user-avatar-section,
+    .nav-user-section,
     .logo-center,
     .nav-items {
         flex: none;
