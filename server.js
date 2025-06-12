@@ -57,7 +57,7 @@ socketService(io);
 // API routes
 
 app.use('/api/v1', userRoutes);
-app.use('/api/v1', courseRoutes);
+app.use('/api/v0', courseRoutes);
 app.use('/api/v2', adminRoutes);
 app.use('/api/v3', lecturerRoutes);
 

@@ -177,7 +177,6 @@ const VideoCourse = () => {
       <div className="sidebar">
         <div className="sidebar-header">
           <h3 className="sidebar-title">Course Contents</h3>
-          <p className="course-progress">{courseInfo.completionRate}% Complete</p>
         </div>
 
         {chapters.map((chapter) => (
@@ -192,11 +191,6 @@ const VideoCourse = () => {
                   <span>{chapter.description}</span>
                 </div>
               </div>
-              <button 
-                className={`chapter-toggle ${expandedChapters.includes(chapter.chapterCode) ? 'expanded' : ''}`}
-              >
-                ⌄
-              </button>
             </div>
 
             <div className={`lessons-list ${expandedChapters.includes(chapter.chapterCode) ? 'expanded' : ''}`}>

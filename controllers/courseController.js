@@ -1,5 +1,6 @@
 const Course = require('../models/courseModel');
 const Enrollment = require('../models/enrollmentModel');
+const UserProgress = require('../models/userProgressModel');
 const mongoose = require('mongoose');
 
 // Get all courses
@@ -196,16 +197,10 @@ exports.enrollInCourse = async (req, res) => {
     try {
         const { courseCode } = req.params;
         
-        // Get user ID from request body, query parameter, or cookie
-        const userId = req.body.userId || req.query.userId || req.cookies.userId;
+        // Get user ID from query parameter or cookie
+        const userId = req.query.userId || req.cookies.userId;
+        console.log(courseCode, userId);
         
-        if (!userId) {
-            return res.status(400).json({
-                success: false,
-                message: 'User ID is required to enroll'
-            });
-        }
-
         // Find the course to get the CourseCode
         let finalCourseCode = courseCode;
         
@@ -250,6 +245,20 @@ exports.enrollInCourse = async (req, res) => {
         });
 
         await newEnrollment.save();
+
+        const newProgress = new UserProgress({
+            Progress: 0,
+            CourseCode: finalCourseCode,
+            UserCode: userId,
+            status: "in_progress",
+            timeSpent: 0,
+            lastAccessed: new Date(),
+            completedAt: null,
+            notes: ''
+        });
+
+        await newProgress.save();
+
 
         res.status(201).json({
             success: true,

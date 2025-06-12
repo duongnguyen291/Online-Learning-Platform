@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api/v1';
+const API_URL = 'http://localhost:5000/api/v0';
 
 // Fetch all courses
 export const getAllCourses = async () => {
@@ -83,7 +83,6 @@ export const enrollInCourse = async (courseId) => {
   try {
     // Get user info from localStorage
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-    console.log(userInfo,courseId);
     if (!userInfo || !userInfo.isLoggedIn || !userInfo.userId) {
       throw new Error('You must be logged in to enroll in a course');
     }

@@ -169,10 +169,27 @@ const MyCourses = () => {
                 <div className="mycourses-info-section">
                   <div className="mycourses-header-section">
                     <h3 className={course.CourseCode}>{course.CourseCode}</h3>
-                    <div className="mycourses-progress-badge" style={{
-                      backgroundColor: getStatusColor(course.status)
-                    }}>
-                      {course.progress}% Complete
+                    <div className="mycourses-progress-container">
+                      <div className="mycourses-progress-bar" style={{
+                        width: '200px',
+                        height: '8px',
+                        backgroundColor: '#e5e7eb',
+                        borderRadius: '4px',
+                        overflow: 'hidden',
+                        marginBottom: '4px'
+                      }}>
+                        <div className="mycourses-progress-fill" style={{
+                          width: `${course.progress}%`,
+                          height: '100%',
+                          backgroundColor: getStatusColor(course.status),
+                          transition: 'width 0.3s ease'
+                        }} />
+                      </div>
+                      <div className="mycourses-progress-badge" style={{
+                        backgroundColor: getStatusColor(course.status)
+                      }}>
+                        {course.progress}% Complete
+                      </div>
                     </div>
                   </div>
 

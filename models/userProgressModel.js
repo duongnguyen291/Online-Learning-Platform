@@ -11,28 +11,28 @@ const userProgressSchema = new mongoose.Schema({
         ref: 'Course',
         required: true
     },
-    Status: {
+    status: {
         type: String,
-        enum: ['not-started', 'in-progress', 'completed'],
-        default: 'not-started'
+        enum: [ 'in_progress', 'completed'],
+        default: 'in_progress'
     },
-    Progress: {
+    progress: {
         type: Number,  // Percentage of completion
         default: 0,
         min: 0,
         max: 100
     },
-    TimeSpent: {
+    timeSpent: {
         type: Number,  // Time spent in minutes
         default: 0
     },
-    LastAccessed: {
+    lastAccessed: {
         type: Date,
         default: Date.now
     },
-    CompletedAt: Date,
-    Notes: String
-}, { timestamps: true, versionKey: false });
+    completedAt: Date,
+    notes: String
+}, { versionKey: false });
 
 // Compound index for efficient queries
 userProgressSchema.index({ UserCode: 1, CourseCode: 1 }, { unique: true });

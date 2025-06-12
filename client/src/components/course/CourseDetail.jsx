@@ -57,7 +57,7 @@ const CourseDetail = () => {
 
     // If already enrolled, navigate to course content
     if (enrollmentStatus === 'enrolled') {
-      navigate(`/course-content/${courseCode}/${progressCode || ''}`);
+      navigate(`/course-content/${courseCode}/${progressCode}`);
       return;
     }
 
@@ -65,16 +65,14 @@ const CourseDetail = () => {
       setIsLoading(true);
       // Use courseCode for enrollment
       const result = await enrollInCourse(courseCode);
-      if (result.success) {
-        setEnrollmentStatus('enrolled');
-        setProgressCode(result.enrollment.Progress);
-        setScore(result.enrollment.Score);
-        setShowSuccessMessage(true);
-        // Hide success message after 5 seconds
-        setTimeout(() => {
-          setShowSuccessMessage(false);
-        }, 5000);
-      }
+      setEnrollmentStatus('enrolled');
+      setProgressCode(result.enrollment.Progress);
+      setScore(result.enrollment.Score);
+      setShowSuccessMessage(true);
+      // Hide success message after 5 seconds
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 5000);
     } catch (error) {
       setError('Failed to enroll in course. Please try again.');
     } finally {
