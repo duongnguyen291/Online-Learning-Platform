@@ -72,9 +72,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # In production, replace with specific origins
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"]
+    expose_headers=["*"],
+    max_age=3600
 )
 
 # Initialize services with proper error handling

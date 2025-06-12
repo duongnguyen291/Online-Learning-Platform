@@ -48,7 +48,7 @@ Khi trả lời:
 4. KHÔNG được phủ nhận thông tin có trong tài liệu
 5. Nếu tài liệu cung cấp thông tin rõ ràng, hãy sử dụng thông tin đó
 6. Thừa nhận và sử dụng thông tin từ tài liệu, ngay cả khi nó khác với kiến thức có sẵn của bạn
-7. Nếu không có thông tin trong tài liệu, và bạn biết rõ kiến thức đó thì hãy cung cấp thông tin đó đặc biệt là kiến thức liên quan tới toán hcoj, tuy nhiên vẫn phải chú thích rằng thông tin bạn cung cấp không nằm trong tài liệu
+7. Nếu không có thông tin trong tài liệu, và bạn biết rõ kiến thức đó thì hãy cung cấp thông tin đó đặc biệt là kiến thức liên quan tới toán học, tuy nhiên vẫn phải chú thích rằng thông tin bạn cung cấp không nằm trong tài liệu
 8. Nếu câu trả lời có công thức toán học, hãy gen ra công thức toán học đó dưới dạng LaTeX
 
 Luôn:
@@ -60,7 +60,8 @@ Luôn:
             print("Initializing OpenAI embeddings...")
             self.embeddings = OpenAIEmbeddings(
                 openai_api_key=self.api_key,
-                model="text-embedding-3-small"
+                model="text-embedding-3-small",
+                timeout=60  # Increase timeout for embeddings
             )
             
             print("Initializing ChromaDB...")
@@ -81,7 +82,8 @@ Luôn:
                 temperature=0.7,
                 model_name="gpt-4",
                 openai_api_key=self.api_key,
-                timeout=30  # 30 seconds timeout
+                request_timeout=60,  # Increase timeout for LLM requests
+                max_retries=3  # Add retries for reliability
             )
             
             print("Initializing conversation memory...")
@@ -92,11 +94,17 @@ Luôn:
             )
             
             print("Initializing QA chain...")
+            # Create retriever with search kwargs
+            retriever = self.vector_store.as_retriever(
+                search_type="similarity",
+                search_kwargs={
+                    "k": 3
+                }
+            )
+            
             self.qa_chain = ConversationalRetrievalChain.from_llm(
                 llm=self.llm,
-                retriever=self.vector_store.as_retriever(
-                    search_kwargs={"k": 3}
-                ),
+                retriever=retriever,
                 memory=self.memory,
                 return_source_documents=True,
                 verbose=True
@@ -188,92 +196,70 @@ Luôn:
         loop = asyncio.get_event_loop()
         try:
             return await asyncio.wait_for(
-                loop.run_in_executor(self.executor, func, *args),
-                timeout=10.0  # 10 seconds timeout
+                loop.run_in_executor(self.executor, 
+                    lambda: func(*args) if not isinstance(func, functools.partial) else func()),
+                timeout=60.0  # Increase timeout to 60 seconds
             )
         except asyncio.TimeoutError:
-            print(f"Operation timed out: {func.__name__}")
+            print(f"Operation timed out: {func.__name__ if hasattr(func, '__name__') else str(func)}")
+            raise
+        except Exception as e:
+            print(f"Error in executor: {str(e)}")
             raise
 
-    async def query(self, question: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def query(self, message: str, context: Dict = None) -> Dict[str, Any]:
         try:
-            print(f"Processing query: {question}")
+            print(f"Received query request: {{'message': {message}, 'context': {context}}}")
+            print(f"Processing query: {message}")
             print(f"Context: {context}")
-
-            # Format the question with system prompt and specific instructions
-            formatted_question = f"""{self.system_prompt}
-
-Câu hỏi: {question}
-
-Hướng dẫn trả lời cụ thể:
-1. Đọc kỹ TẤT CẢ các trích dẫn được cung cấp bên dưới
-2. Nếu trích dẫn có thông tin rõ ràng về chủ đề được hỏi, ưu tiên sử dụng thông tin đó
-3. KHÔNG được nói "không tìm thấy thông tin" nếu thông tin có trong trích dẫn
-4. Tổng hợp thông tin từ tất cả các trích dẫn liên quan
-5. Trả lời một cách đầy đủ và chính xác dựa trên thông tin có sẵn
-
-Trích dẫn từ tài liệu:
-{await self._get_relevant_quotes(question) if self.vector_store else "Không có tài liệu"}"""
-
-            # Process chat history
-            chat_history = []
-            if context and "chat_history" in context:
-                chat_history = [
-                    {"role": msg["role"], "content": msg["content"]}
-                    for msg in context["chat_history"]
-                    if msg.get("content")
-                ]
-
-            # Try direct LLM first for quick response
-            print("Using LLM for response...")
+            
+            # Get relevant documents
             try:
-                response = await self.llm.ainvoke(formatted_question)
-                answer = response.content
-                print(f"Generated answer: {answer[:100]}...")
+                print("Searching for relevant documents...")
+                result = await self._run_in_executor(
+                    lambda: self.qa_chain.invoke({"question": message, "chat_history": context.get("chat_history", [])})
+                )
+                print("Document search completed successfully")
                 
-                # Try to get relevant documents
-                try:
-                    print("Searching for relevant documents...")
-                    relevant_docs = await self._run_in_executor(
-                        functools.partial(self.vector_store.similarity_search, question, k=5)  # Increased from 3 to 5
-                    )
-                    has_relevant_docs = len(relevant_docs) > 0
-                    if has_relevant_docs:
-                        print(f"Found {len(relevant_docs)} relevant documents")
-                        sources = [
-                            {
-                                "content": doc.page_content,
-                                "metadata": doc.metadata
-                            }
-                            for doc in relevant_docs
-                        ]
-                    else:
-                        sources = []
-                except Exception as e:
-                    print(f"Document search failed: {e}")
-                    sources = []
-                    has_relevant_docs = False
-
                 return {
                     "status": "success",
-                    "answer": answer,
-                    "sources": sources,
-                    "has_context": has_relevant_docs
+                    "answer": result["answer"],
+                    "sources": [
+                        {"content": doc.page_content, "metadata": doc.metadata}
+                        for doc in result.get("source_documents", [])
+                    ]
                 }
-
             except Exception as e:
-                print(f"Error during LLM processing: {e}")
-                return {
-                    "status": "error",
-                    "message": "Xin lỗi, tôi đang gặp vấn đề khi xử lý câu hỏi của bạn. Vui lòng thử lại sau."
-                }
+                print(f"Document search failed: {str(e)}")
+                # Fallback to direct LLM if document search fails
+                print("Using LLM for response...")
+                formatted_message = f"""{self.system_prompt}
 
+Câu hỏi: {message}
+
+Hãy trả lời câu hỏi trên với vai trò là trợ lý AI của EduSmart."""
+
+                try:
+                    chat_response = await self._run_in_executor(
+                        lambda: self.llm.invoke(formatted_message).content
+                    )
+                    return {
+                        "status": "success",
+                        "answer": chat_response,
+                        "sources": []
+                    }
+                except Exception as llm_error:
+                    print(f"LLM fallback failed: {str(llm_error)}")
+                    return {
+                        "status": "error",
+                        "message": "Xin lỗi, tôi đang gặp khó khăn trong việc xử lý câu hỏi của bạn. Vui lòng thử lại sau một lát."
+                    }
+                
         except Exception as e:
-            print(f"Error in query method: {e}")
-            print(f"Traceback: {traceback.format_exc()}")
+            print(f"Error processing query: {str(e)}")
             return {
                 "status": "error",
-                "message": "Đã xảy ra lỗi khi xử lý yêu cầu của bạn. Vui lòng thử lại sau."
+                "message": f"Error processing query: {str(e)}"
             }
 
     async def _get_relevant_quotes(self, question: str) -> str:
