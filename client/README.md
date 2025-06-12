@@ -17,9 +17,9 @@ Start admin fe server
 npm start
 ```
 
-Test lecturer account
+Test user account
 
 ```
-phong.tran@email.com
-phong123
+test6@gmail.com
+test6@gmail.com
 ```
