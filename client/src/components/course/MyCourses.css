@@ -680,3 +680,35 @@
   border-radius: 0.5rem;
   margin: 2rem;
 }
+
+.mycourses-progress-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.mycourses-notes {
+  margin-top: 12px;
+  padding: 8px;
+  background-color: #f3f4f6;
+  border-radius: 6px;
+}
+
+.mycourses-notes p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.mycourses-green-icon {
+  background-color: #D1FAE5;
+  color: #059669;
+}
+
+.mycourses-stat-card:hover .mycourses-green-icon {
+  background-color: #059669;
+  color: white;
+}

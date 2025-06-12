@@ -1,41 +1,41 @@
 const mongoose = require('mongoose');
 
 const userProgressSchema = new mongoose.Schema({
-    userCode: {
+    UserCode: {
         type: String,
         ref: 'User',
         required: true
     },
-    courseCode: {
+    CourseCode: {
         type: String,
         ref: 'Course',
         required: true
     },
-    status: {
+    Status: {
         type: String,
-        enum: ['enrolled', 'in_progress', 'completed'],
-        default: 'enrolled'
+        enum: ['not-started', 'in-progress', 'completed'],
+        default: 'not-started'
     },
-    progress: {
+    Progress: {
         type: Number,  // Percentage of completion
         default: 0,
         min: 0,
         max: 100
     },
-    timeSpent: {
+    TimeSpent: {
         type: Number,  // Time spent in minutes
         default: 0
     },
-    lastAccessed: {
+    LastAccessed: {
         type: Date,
         default: Date.now
     },
-    completedAt: Date,
-    notes: String
+    CompletedAt: Date,
+    Notes: String
 }, { timestamps: true, versionKey: false });
 
 // Compound index for efficient queries
-userProgressSchema.index({ userCode: 1, courseCode: 1 }, { unique: true });
+userProgressSchema.index({ UserCode: 1, CourseCode: 1 }, { unique: true });
 
 const UserProgress = mongoose.model("UserProgress", userProgressSchema, 'UserProgress');
 module.exports = UserProgress; 

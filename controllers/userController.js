@@ -19,6 +19,8 @@ const User = require("../models/userModel");
 const Course = require("../models/courseModel");
 const Enrollment = require("../models/enrollmentModel");
 const PendingRegistration = require("../models/pendingRegistratioModel");
+const UserProgress = require("../models/userProgressModel");
+const Chapter = require("../models/chapterModel");
 
 const register = async (req, res) => {
   const { userCode, name, role, DOB, login, password } = req.body;
@@ -268,11 +270,89 @@ const pendingRegistration = async (req, res) => {
   }
 };
 
+const getUserProgress = async (req, res) => {
+  try {
+    // Get user code from query params
+    const { userCode } = req.query;
+    
+    if (!userCode) {
+      return res.status(400).json({
+        success: false,
+        message: "UserCode is required"
+      });
+    }
+
+    // Find all progress entries for this user
+    const progressList = await UserProgress.find({ UserCode: userCode });
+
+    // Convert each progress entry to JSON format
+    const formattedProgress = progressList.map(progress => progress.toJSON());
+
+    return res.status(200).json({
+      success: true,
+      progress: formattedProgress,
+      message: "User progress fetched successfully"
+    });
+
+  } catch (error) {
+    console.error("Error fetching user progress:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
+const getChaptersByCourse = async (req, res) => {
+  try {
+    const { userCode, courseCode } = req.query;
+    console.log(req.query);
+
+    if (!userCode || !courseCode) {
+      return res.status(400).json({
+        success: false,
+        message: "Both userCode and courseCode are required"
+      });
+    }
+
+    // Verify if the user is enrolled in the course
+    const enrollment = await Enrollment.findOne({ 
+      UserCode: userCode,
+      CourseCode: courseCode 
+    });
+
+    if (!enrollment) {
+      return res.status(403).json({
+        success: false,
+        message: "User is not enrolled in this course"
+      });
+    }
+
+    // Get all chapters for the course
+    const chapters = await Chapter.find({ courseCode });
+
+    return res.status(200).json({
+      success: true,
+      chapters,
+      message: "Chapters fetched successfully"
+    });
+
+  } catch (error) {
+    console.error("Error fetching chapters:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
 module.exports = { 
   register, 
   loginUser, 
   logoutUser, 
   getCourses, 
   getProfile,
-  pendingRegistration
+  pendingRegistration,
+  getUserProgress,
+  getChaptersByCourse
 };

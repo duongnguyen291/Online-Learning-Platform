@@ -22,7 +22,9 @@ const {
   logoutUser, 
   getCourses, 
   getProfile,
-  pendingRegistration
+  pendingRegistration,
+  getUserProgress,
+  getChaptersByCourse
 } = require('../controllers/userController');
 const { isStudent, isLecturer } = require('../middlewares/authMiddleware');
 const userRouter = express.Router();
@@ -33,6 +35,8 @@ userRouter.post('/logout', logoutUser);
 userRouter.post('/pending-registration', pendingRegistration);
 userRouter.get('/my-courses', isStudent, getCourses);
 userRouter.get('/profile', isStudent, getProfile);
+userRouter.get('/progress', getUserProgress);
+userRouter.get('/chapters', getChaptersByCourse);
 
 // Lecturer routes - could be moved to a separate router if needed
 userRouter.get('/lecturer/profile', isLecturer, getProfile);
