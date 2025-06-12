@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import Latex from 'react-latex';
+import { TypeAnimation } from 'react-type-animation';
+import 'katex/dist/katex.min.css';
 import './Chatbot.css';
 
 // API configuration
@@ -142,6 +145,161 @@ const formatCourseRecommendations = (courses) => {
   return formattedText;
 };
 
+// Helper function to process text with LaTeX
+const processText = (text) => {
+  if (!text) return [];
+
+  const parts = [];
+  let currentText = '';
+  let index = 0;
+
+  while (index < text.length) {
+    // Look for LaTeX delimiters
+    const blockStart = text.indexOf('$$', index);
+    const inlineStart = text.indexOf('$', index);
+
+    // No more LaTeX found
+    if (blockStart === -1 && inlineStart === -1) {
+      currentText += text.slice(index);
+      break;
+    }
+
+    // Find the next LaTeX section
+    let start = blockStart !== -1 ? blockStart : inlineStart;
+    if (blockStart !== -1 && inlineStart !== -1) {
+      start = Math.min(blockStart, inlineStart);
+    }
+
+    // Add text before LaTeX
+    if (start > index) {
+      currentText += text.slice(index, start);
+    }
+
+    // Process LaTeX
+    if (start === blockStart) {
+      // Block LaTeX
+      const end = text.indexOf('$$', start + 2);
+      if (end !== -1) {
+        if (currentText) {
+          parts.push({ type: 'text', content: currentText });
+          currentText = '';
+        }
+        parts.push({
+          type: 'math',
+          content: text.slice(start + 2, end),
+          isBlock: true
+        });
+        index = end + 2;
+        continue;
+      }
+    } else {
+      // Inline LaTeX
+      const end = text.indexOf('$', start + 1);
+      if (end !== -1) {
+        if (currentText) {
+          parts.push({ type: 'text', content: currentText });
+          currentText = '';
+        }
+        parts.push({
+          type: 'math',
+          content: text.slice(start + 1, end),
+          isBlock: false
+        });
+        index = end + 1;
+        continue;
+      }
+    }
+
+    // If we reach here, it means we found a $ or $$ but no matching end
+    currentText += text[start];
+    index = start + 1;
+  }
+
+  if (currentText) {
+    parts.push({ type: 'text', content: currentText });
+  }
+
+  return parts;
+};
+
+// Component to render math formulas
+const MathComponent = ({ content, isBlock }) => {
+  const formula = isBlock ? `$$${content}$$` : `$${content}$`;
+  return (
+    <div 
+      className={isBlock ? 'math-block' : 'math-inline'}
+      dangerouslySetInnerHTML={{ 
+        __html: window.katex.renderToString(content, {
+          displayMode: isBlock,
+          throwOnError: false
+        })
+      }}
+    />
+  );
+};
+
+// Component to render message content
+const MessageContent = ({ content, isTyping }) => {
+  const [displayedContent, setDisplayedContent] = useState('');
+  const [isComplete, setIsComplete] = useState(!isTyping);
+  
+  useEffect(() => {
+    if (!isTyping) {
+      setDisplayedContent(content);
+      setIsComplete(true);
+      return;
+    }
+
+    let currentIndex = 0;
+    const textLength = content.length;
+    const baseInterval = 10;
+    const typingInterval = Math.max(baseInterval, Math.min(20, 500 / textLength));
+
+    const typeNextCharacter = () => {
+      if (currentIndex < textLength) {
+        setDisplayedContent(content.slice(0, currentIndex + 1));
+        currentIndex++;
+        
+        const nextChar = content[currentIndex];
+        const pauseAfterPunctuation = /[.,!?]/.test(nextChar) ? 100 : 0;
+        
+        setTimeout(typeNextCharacter, typingInterval + pauseAfterPunctuation);
+      } else {
+        setIsComplete(true);
+      }
+    };
+
+    typeNextCharacter();
+
+    return () => {
+      setDisplayedContent('');
+      setIsComplete(false);
+    };
+  }, [content, isTyping]);
+
+  const parts = processText(displayedContent);
+
+  return (
+    <div className={isComplete ? 'message-content' : 'typing-content'}>
+      {parts.map((part, index) => (
+        <React.Fragment key={index}>
+          {part.type === 'text' ? (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {part.content}
+            </ReactMarkdown>
+          ) : (
+            <MathComponent 
+              content={part.content} 
+              isBlock={part.isBlock} 
+            />
+          )}
+        </React.Fragment>
+      ))}
+      {!isComplete && <span className="typing-cursor">|</span>}
+    </div>
+  );
+};
+
 const Message = ({ message, onSourceClick }) => {
   const [showSources, setShowSources] = useState(false);
 
@@ -152,9 +310,10 @@ const Message = ({ message, onSourceClick }) => {
   return (
     <div className={`message ${message.isUser ? 'user' : 'ai'}`}>
       <div className="message-content">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-          {message.text}
-        </ReactMarkdown>
+        <MessageContent 
+          content={message.text} 
+          isTyping={!message.isUser && message.isTyping}
+        />
         {message.sources && message.sources.length > 0 && (
           <div className="message-sources">
             <button 
@@ -359,9 +518,21 @@ const Chatbot = () => {
         text: response + (hasContext ? "\n\n(Câu trả lời này được tham khảo từ tài liệu đã được tải lên)" : ""),
         sources: sources,
         isUser: false,
-        timestamp: new Date()
+        timestamp: new Date(),
+        isTyping: true
       };
       setMessages(prev => [...prev, aiMessageObj]);
+
+      // Remove typing effect after animation completes
+      setTimeout(() => {
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === aiMessageObj.id 
+              ? { ...msg, isTyping: false }
+              : msg
+          )
+        );
+      }, aiMessageObj.text.length * 50 + 1000); // Adjust timing based on text length
 
     } catch (error) {
       console.error('Error handling message:', error);
@@ -369,9 +540,21 @@ const Chatbot = () => {
         id: `error-${Date.now()}`,
         text: 'Xin lỗi, tôi gặp lỗi khi xử lý yêu cầu của bạn. Vui lòng thử lại sau.',
         isUser: false,
-        timestamp: new Date()
+        timestamp: new Date(),
+        isTyping: true
       };
       setMessages(prev => [...prev, errorMessageObj]);
+
+      // Remove typing effect for error message
+      setTimeout(() => {
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === errorMessageObj.id 
+              ? { ...msg, isTyping: false }
+              : msg
+          )
+        );
+      }, 2000);
     } finally {
       setIsLoading(false);
       setInput('');

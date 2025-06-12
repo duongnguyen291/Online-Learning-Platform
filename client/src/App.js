@@ -6,7 +6,6 @@ import RegisterPage from './pages/RegisterPage';
 import CoursePage from './pages/CoursePage';
 import CourseDetailPage from './pages/CourseDetailPage';
 import VideoCoursePage from './pages/VideoCourse';
-import ChatbotBubble from './components/chatbot/ChatbotBubble';
 import ChatBotPage from './pages/ChatBotPage';
 import InnerCoursePage from './pages/InnerCoursePage';
 import MyCoursesPage from './pages/MyCoursesPage';
@@ -54,7 +53,7 @@ function App() {
         } />
       </Routes>
     </Router>
-    <ChatbotBubble />
+   
     </>
   );
 }

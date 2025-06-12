@@ -7,6 +7,11 @@
   font-family: sans-serif;
 }
 
+/* Hide chatbot on landing page */
+.landing-page .chatbot-bubble__container {
+  display: none;
+}
+
 /* Cửa sổ chat */
 .chatbot-bubble__window {
   position: relative;
@@ -164,6 +169,16 @@
   display: flex;
   margin-bottom: 16px;
   align-items: flex-end;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: messageAppear 0.3s ease forwards;
+}
+
+@keyframes messageAppear {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .chatbot-bubble__message--user {
@@ -224,7 +239,7 @@
 }
 
 .chatbot-bubble__message-bubble {
-  padding: 10px 16px;
+  padding: 12px 16px;
   border-radius: 16px;
   font-size: 14px;
   line-height: 1.5;
@@ -494,4 +509,90 @@
 
 .chatbot-bubble__toggle-eye--right {
   right: 6px;
+}
+
+/* Math formula styles */
+.katex {
+  font-size: 1.1em !important;
+  line-height: 1.5;
+}
+
+.katex-display {
+  margin: 1em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5em 0;
+}
+
+/* Improve message text readability */
+.chatbot-bubble__message-text {
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+/* Style inline math */
+.chatbot-bubble__message-bubble span.katex {
+  margin: 0 0.2em;
+}
+
+/* Style block math */
+.chatbot-bubble__message-bubble .katex-display {
+  background: rgba(74, 144, 226, 0.05);
+  border-radius: 4px;
+  padding: 0.5em;
+  margin: 0.5em 0;
+}
+
+/* Typewriter effect styles */
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.type-animation-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background-color: currentColor;
+  margin-left: 2px;
+  animation: blink 1s infinite;
+}
+
+/* Style scrollbars for math overflow */
+.katex-display::-webkit-scrollbar {
+  height: 4px;
+}
+
+.katex-display::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 2px;
+}
+
+.katex-display::-webkit-scrollbar-thumb {
+  background: rgba(74, 144, 226, 0.5);
+  border-radius: 2px;
+}
+
+.katex-display::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 144, 226, 0.7);
+}
+
+/* Improve source display for math content */
+.chatbot-bubble__sources-content {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Add loading animation for math rendering */
+.katex-html {
+  opacity: 0;
+  animation: katexAppear 0.2s ease forwards;
+}
+
+@keyframes katexAppear {
+  to {
+    opacity: 1;
+  }
 }
