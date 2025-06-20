@@ -138,7 +138,7 @@ class LearningPathService:
                 }
 
             # Get all relevant course details from Course collection
-            course_codes = [p["CourseCode"] for p in progress_records]  # Changed to match database schema
+            course_codes = [p.get("CourseCode") for p in progress_records if p.get("CourseCode")]  # Changed to match database schema
             print(f"Looking for courses with codes: {course_codes}")
             courses = await self.db.Course.find({
                 "CourseCode": {"$in": course_codes}
@@ -160,31 +160,37 @@ class LearningPathService:
             }
 
             for progress in progress_records:
-                course = course_details.get(progress["CourseCode"])  # Changed to match database schema
+                course = course_details.get(progress.get("CourseCode"))  # Changed to match database schema
                 if not course:
                     continue
 
+                # Get progress value handling both cases
+                progress_value = progress.get("progress", progress.get("Progress", 0))
+                status = progress.get("status", progress.get("Status", "in_progress"))
+                time_spent = progress.get("timeSpent", progress.get("TimeSpent", 0))
+                last_accessed = progress.get("lastAccessed", progress.get("LastAccessed"))
+
                 # Track course status
                 course_info = {
-                    "course_id": progress["CourseCode"],  # Changed to match database schema
+                    "course_id": progress.get("CourseCode"),  # Changed to match database schema
                     "title": course["Name"],
-                    "category": course["category"],
-                    "progress": progress["progress"],
-                    "time_spent": progress.get("timeSpent", 0),
-                    "last_accessed": progress.get("lastAccessed")
+                    "category": course.get("category", "Unknown"),
+                    "progress": progress_value,
+                    "time_spent": time_spent,
+                    "last_accessed": last_accessed
                 }
 
-                if progress["status"] == "completed":
+                if status.lower() == "completed":
                     learning_status["completed_courses"].append(course_info)
                     # Add to skill levels
                     if course.get("skillTags"):
                         for skill in course["skillTags"]:
                             learning_status["skill_levels"][skill] = learning_status["skill_levels"].get(skill, 0) + 1
-                elif progress["status"] == "in_progress":
+                else:
                     learning_status["in_progress_courses"].append(course_info)
 
                 # Track learning time
-                learning_status["total_learning_time"] += progress.get("timeSpent", 0)
+                learning_status["total_learning_time"] += time_spent
                 # Track preferred categories
                 if course.get("category"):
                     learning_status["preferred_categories"].add(course["category"])

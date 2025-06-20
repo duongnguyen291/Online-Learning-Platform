@@ -33,34 +33,25 @@ async def upload_document(file: UploadFile = File(...)) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/query")
-async def query(request: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
+async def query_rag(request_data: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
     try:
-        print("Received query request:", request)
+        print(f"Request data: {request_data}")
+        message = request_data.get("message")
+        context = request_data.get("context", {})
         
-        if "message" not in request:
+        if not message:
             raise HTTPException(status_code=400, detail="Message is required")
             
-        result = await rag_service.query(
-            question=request["message"],
-            context=request.get("context", {})
-        )
-        
-        print("RAG service response:", result)
+        result = await rag_service.query(message=message, context=context)
         
         if result["status"] == "error":
-            raise HTTPException(status_code=400, detail=result["message"])
+            raise HTTPException(status_code=500, detail=result["message"])
             
         return result
-    except HTTPException as he:
-        print(f"HTTP error in query endpoint: {str(he)}")
-        raise he
     except Exception as e:
         print(f"Error in query endpoint: {str(e)}")
-        print(f"Request data: {request}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error: {str(e)}"
-        )
+        print(f"Request data: {request_data}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @router.get("/context")
 async def get_context(query: str) -> Dict[str, Any]:
