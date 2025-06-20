@@ -61,6 +61,7 @@ function LoginForm() {
             name: result.user.name,
             role: result.user.role
           }));
+          console.log(result.user.userCode);
             
           // Redirect to home page
           navigate('/');
